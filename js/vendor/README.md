@@ -7,26 +7,41 @@
 
 ## Что нужно скачать
 
-Проще всего прямо на сервере (раз там есть интернет):
+Проще всего прямо на сервере (раз там есть интернет). **Обратите
+внимание: нужно ТРИ файла, не два** — `GLTFLoader.js` сам импортирует
+ещё `BufferGeometryUtils.js` (используется для моделей с нестандартным
+draw mode); если его не будет — `GLTFLoader.js` целиком не загрузится,
+и приложение откатится на CSS-заглушку, даже если два первых файла на
+месте.
 
 ```bash
 cd js/vendor
 curl -L -o three.module.js https://unpkg.com/three@0.160.0/build/three.module.js
-mkdir -p addons/loaders
+mkdir -p addons/loaders addons/utils
 curl -L -o addons/loaders/GLTFLoader.js https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js
+curl -L -o addons/utils/BufferGeometryUtils.js https://unpkg.com/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js
+```
+
+Итоговая структура должна быть такой:
+```
+js/vendor/three.module.js
+js/vendor/addons/loaders/GLTFLoader.js
+js/vendor/addons/utils/BufferGeometryUtils.js
 ```
 
 Либо вручную: возьмите официальную сборку Three.js (ES-модуль, не UMD)
 со страницы релизов github.com/mrdoob/three.js (папка `build/` архива
-релиза) и положите два файла ровно по этим путям:
+релиза) и положите файлы ровно по этим путям — `GLTFLoader.js` лежит в
+архиве по пути `examples/jsm/loaders/GLTFLoader.js`, а
+`BufferGeometryUtils.js` — по пути `examples/jsm/utils/
+BufferGeometryUtils.js`. Переносятся как есть, без правок.
 
-```
-js/vendor/three.module.js
-js/vendor/addons/loaders/GLTFLoader.js
-```
-
-`GLTFLoader.js` лежит в архиве релиза по пути
-`examples/jsm/loaders/GLTFLoader.js` — переносится как есть, без правок.
+### Как проверить, что всё подключилось
+Откройте `index.html`, зайдите на экран «Пантера» или «Человек» и
+откройте консоль браузера (F12 → Console). Если там нет строк вида
+`[3D] ... не найден` — значит всё загрузилось и работает настоящий
+рендер. Если строка есть — в ней прямо указано, какого именно файла не
+хватает.
 
 Версия важна: `three.module.js` и `GLTFLoader.js` должны быть из одного
 и того же релиза (иначе возможны несовпадения API).
