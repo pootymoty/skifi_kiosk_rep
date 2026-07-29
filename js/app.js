@@ -50,13 +50,23 @@ function teardownActive() {
 // Возврат к видео-заставке после простоя — тот самый недостающий
 // таймер. Срабатывает независимо от того, на каком сейчас экране
 // (карта / объект / авторы) находится пользователь.
-function returnToAttract() {
+function returnToAttract(isManualRestart = false) {
   if (stageController && typeof stageController.destroy === "function") {
     stageController.destroy();
   }
   stageController = null;
   teardownActive();
+  // Если пользователь вручную нажал кнопку перезапуска видео —
+  // сбросить таймер на 20 секунд. Иначе продолжить обычный цикл
+  // с двухуровневыми таймерами.
+  if (isManualRestart) {
+    idleWatcher.resetToFirstTimeout(); // см. js/utils/idle.js
+  }
   startIntro();
+}
+
+function restartVideo() {
+  returnToAttract(true); // true = пользователь вручную нажал кнопку
 }
 
 const idleWatcher = createGlobalIdleWatcher(
@@ -82,7 +92,8 @@ function goMap() {
     CONTENT.map,
     CONTENT.objects,
     (id) => openObject(id),
-    () => goAuthors()
+    () => goAuthors(),
+    () => restartVideo()
   );
   showScreen("map");
 }

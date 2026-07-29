@@ -19,7 +19,7 @@ import { createOnceHint } from "../utils/hints.js";
 
 const SELECT_DELAY_MS = 380;
 
-export function initMapScreen(container, mapData, objects, onSelect, onAuthors) {
+export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo) {
   container.innerHTML = `
     <div class="map-stage">
       <img class="map-bg" alt="" draggable="false">
@@ -27,6 +27,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors) 
       <div class="hotspots-layer"></div>
       <div class="map-caption">коснитесь объекта на карте кургана</div>
       <button class="btn authors-fab">Авторы</button>
+      <button class="btn restart-video-fab" title="Переиграть видео-заставку">▶ Видео</button>
       <div class="hint-toast map-hint">Нажмите на объект, чтобы узнать больше</div>
     </div>
   `;
@@ -35,6 +36,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors) 
   const bg = container.querySelector(".map-bg");
   const layer = container.querySelector(".hotspots-layer");
   const authorsBtn = container.querySelector(".authors-fab");
+  const restartVideoBtn = container.querySelector(".restart-video-fab");
   const hintEl = container.querySelector(".map-hint");
 
   bg.addEventListener("error", () => {
@@ -88,6 +90,11 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors) 
   authorsBtn.addEventListener("pointerdown", () => {
     if (transitioning) return;
     onAuthors();
+  });
+
+  restartVideoBtn.addEventListener("pointerdown", () => {
+    if (transitioning) return;
+    onRestartVideo(true); // true = пользователь вручную нажал кнопку, переключиться на таймер 20 сек
   });
 
   const hint = createOnceHint(hintEl, layer);
