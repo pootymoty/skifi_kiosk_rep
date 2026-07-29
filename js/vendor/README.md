@@ -7,9 +7,18 @@
 
 ## Что нужно скачать
 
-Возьмите официальную сборку Three.js (ES-модуль, не UMD) — например, со
-страницы релизов github.com/mrdoob/three.js (папка `build/` архива
-релиза) — и положите два файла ровно по этим путям:
+Проще всего прямо на сервере (раз там есть интернет):
+
+```bash
+cd js/vendor
+curl -L -o three.module.js https://unpkg.com/three@0.160.0/build/three.module.js
+mkdir -p addons/loaders
+curl -L -o addons/loaders/GLTFLoader.js https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js
+```
+
+Либо вручную: возьмите официальную сборку Three.js (ES-модуль, не UMD)
+со страницы релизов github.com/mrdoob/three.js (папка `build/` архива
+релиза) и положите два файла ровно по этим путям:
 
 ```
 js/vendor/three.module.js
