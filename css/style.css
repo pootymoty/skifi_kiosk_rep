@@ -72,14 +72,21 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
     linear-gradient(160deg,#211c15,#171310);}
 .map-stage::after{content:""; position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);}
-.hotspots-layer{position:absolute; inset:0;}
+.map-scrim{position:absolute; inset:0; background:rgba(8,6,4,0.72); opacity:0;
+  pointer-events:none; transition:opacity .38s ease; z-index:1;}
+.map-stage.selecting .map-scrim{opacity:1;}
+.map-stage.selecting .authors-fab{opacity:.35; pointer-events:none; transition:opacity .3s ease;}
+.hotspots-layer{position:absolute; inset:0; z-index:2;}
 .map-caption{position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
   font-family:'Trebuchet MS',sans-serif; font-size:11px; letter-spacing:.25em; color:var(--text-dim);
   text-transform:uppercase; z-index:2;}
 .authors-fab{position:absolute; right:20px; bottom:20px; z-index:2;}
 
-.hotspot{position:absolute; width:112px; height:112px; margin:-56px 0 0 -56px;
-  display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:1;}
+/* --- метка объекта: круглая кнопка (режим по умолчанию, пока нет своих картинок-вырезок) --- */
+.hotspot{position:absolute; width:112px; height:112px; transform:translate(-50%,-50%);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition:opacity .3s ease;}
+.map-stage.selecting .hotspot:not(.selected){opacity:0;}
 .hotspot .ring{position:absolute; inset:0; border-radius:50%; border:1px solid var(--gold);
   opacity:.55; animation:pulse 3.2s ease-in-out infinite;}
 .hotspot .ring2{position:absolute; inset:14px; border-radius:50%; border:1px solid var(--gold-bright);
@@ -87,11 +94,32 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hotspot .glyph{position:relative; width:64px; height:64px; border-radius:50%;
   background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--bronze) 60%, #5c421f 100%);
   box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.35);
-  display:flex; align-items:center; justify-content:center; font-size:24px; color:#1c1408;}
+  display:flex; align-items:center; justify-content:center; font-size:24px; color:#1c1408;
+  transition:transform .3s cubic-bezier(.3,.7,.4,1.4);}
+.hotspot.selected .glyph{transform:scale(1.12);
+  box-shadow:0 6px 24px rgba(0,0,0,0.6), 0 0 24px rgba(230,197,129,.8), inset 0 0 10px rgba(0,0,0,0.35);}
 .hotspot .label{position:absolute; top:78px; left:50%; transform:translateX(-50%);
   white-space:nowrap; font-family:'Trebuchet MS',sans-serif; font-size:12px; letter-spacing:.12em;
   text-transform:uppercase; color:var(--parchment); text-shadow:0 2px 6px rgba(0,0,0,0.8);}
 @keyframes pulse{0%,100%{transform:scale(1); opacity:.55;} 50%{transform:scale(1.12); opacity:.15;}}
+
+/* --- метка объекта: картинка-вырезка (данные → content.js → hotspotImage) ---
+   Кликабельна вся картинка (не круглая зона), подсветка идёт по её
+   реальному контуру — drop-shadow работает по alpha-каналу PNG, поэтому
+   отдельно рисовать SVG-обводку не нужно, она получается «бесплатно». */
+.hotspot.hotspot-image-mode{width:var(--hs-w, 120px); height:auto; display:block;}
+.hotspot-cutout{width:100%; height:auto; display:block; pointer-events:none;
+  filter:drop-shadow(0 0 5px rgba(230,197,129,.4)) drop-shadow(0 0 12px rgba(230,197,129,.2));
+  animation:hotspotBreathe 3.6s ease-in-out infinite;
+  transition:transform .3s cubic-bezier(.3,.7,.4,1.4);}
+@keyframes hotspotBreathe{
+  0%,100%{filter:drop-shadow(0 0 5px rgba(230,197,129,.4)) drop-shadow(0 0 12px rgba(230,197,129,.2));}
+  50%{filter:drop-shadow(0 0 9px rgba(230,197,129,.65)) drop-shadow(0 0 20px rgba(230,197,129,.38));}
+}
+.hotspot.hotspot-image-mode.selected .hotspot-cutout{
+  animation:none; transform:scale(1.08);
+  filter:drop-shadow(0 0 14px var(--gold-bright)) drop-shadow(0 0 30px rgba(230,197,129,.85));}
+.hotspot.hotspot-image-mode .label{top:calc(100% + 8px);}
 
 /* shared hint toast */
 .hint-toast{position:absolute; left:50%; bottom:26px; transform:translateX(-50%) translateY(6px);
@@ -110,7 +138,9 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   background:radial-gradient(ellipse at 50% 30%, rgba(140,106,63,0.22), transparent 60%),
     linear-gradient(160deg,#1d1811,#100d09);
   border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
-  perspective:900px;}
+  perspective:900px;
+  opacity:0; transform:scale(.93); transition:opacity .42s ease, transform .42s cubic-bezier(.2,.8,.3,1);}
+.stage-3d.revealed{opacity:1; transform:scale(1);}
 .stage-3d canvas{width:100%!important; height:100%!important; display:block;}
 .model-card{position:relative; width:150px; height:190px; transform-style:preserve-3d; will-change:transform;}
 .model-face{position:absolute; inset:0; border-radius:10px; backface-visibility:hidden;
@@ -126,7 +156,9 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* --- 2D stage (carpet) --- */
 .stage-2d{position:relative; flex:0 0 46%; border-radius:8px; overflow:hidden;
-  border:1px solid var(--line); background:#100d09;}
+  border:1px solid var(--line); background:#100d09;
+  opacity:0; transform:scale(.93); transition:opacity .42s ease, transform .42s cubic-bezier(.2,.8,.3,1);}
+.stage-2d.revealed{opacity:1; transform:scale(1);}
 .canvas2d-wrap{position:absolute; inset:0; overflow:hidden; touch-action:none;}
 .canvas2d-pan{position:absolute; inset:0; transform-origin:center center; will-change:transform;}
 .canvas2d-img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
