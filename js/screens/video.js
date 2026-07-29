@@ -5,6 +5,13 @@
 // ============================================================
 
 export function initVideoScreen(container, videoSrc, onFinished) {
+  // Важно: container — это один и тот же DOM-элемент #screen-video
+  // при каждом повторном показе (attract loop). Прошлый показ мог
+  // оставить класс fading-out (см. finish() ниже) — если его не снять,
+  // затемняющая плашка так и останется непрозрачной, и видео будет не
+  // видно (чёрный экран) при следующем запуске.
+  container.classList.remove("fading-out");
+
   container.innerHTML = `
     <video class="intro-video" playsinline muted autoplay preload="auto"></video>
     <div class="intro-fade"></div>
