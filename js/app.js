@@ -12,12 +12,12 @@ import { initObjectStage3D } from "./screens/object3d.js";
 import { initObjectStage2D } from "./screens/object2d.js";
 import { initAuthorsScreen } from "./screens/authors.js";
 
-// Через сколько мс бездействия (на любом экране, кроме самого видео)
-// приложение возвращается к видео-заставке (attract loop). Раньше
-// такого таймера не было вообще — единственный существовавший таймер
-// простоя был локальный, внутри 3D-стадии, и сбрасывал только
-// поворот/зум модели, к видео отношения не имел.
-const GLOBAL_IDLE_MS = 45000;
+// Таймеры простоя (attract loop). Два режима — см. js/utils/idle.js:
+// пока не было НИ ОДНОГО взаимодействия после видео — короткий таймер,
+// как только было хотя бы одно — длинный, перезапускающийся при
+// каждом следующем взаимодействии.
+const FIRST_IDLE_MS = 20 * 1000;       // 20 секунд без первого взаимодействия
+const REPEAT_IDLE_MS = 5 * 60 * 1000;  // 5 минут после любого взаимодействия
 
 const screens = {
   video: document.getElementById("screen-video"),
@@ -58,7 +58,10 @@ function returnToAttract() {
   startIntro();
 }
 
-const idleWatcher = createGlobalIdleWatcher(GLOBAL_IDLE_MS, returnToAttract);
+const idleWatcher = createGlobalIdleWatcher(
+  { firstTimeoutMs: FIRST_IDLE_MS, repeatTimeoutMs: REPEAT_IDLE_MS },
+  returnToAttract
+);
 
 // ---------------- VIDEO ----------------
 function startIntro() {
