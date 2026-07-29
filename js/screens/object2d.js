@@ -22,6 +22,10 @@ const MAX_ZOOM = 3;
 const DETAIL_TRANSITION_MS = 850;
 
 export function initObjectStage2D(container, { imagePath, hole, baseSections, onSectionsChange }) {
+  // Сбрасываем анимацию появления с прошлого показа — контейнер
+  // (#stage2d) переиспользуется при каждом открытии объекта.
+  container.classList.remove("revealed");
+
   container.innerHTML = `
     <div class="canvas2d-wrap">
       <div class="canvas2d-pan">
@@ -45,16 +49,21 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const badge = container.querySelector(".asset-missing-note");
 
   // ---------------- загрузка изображений ----------------
+  function revealNow() {
+    requestAnimationFrame(() => container.classList.add("revealed"));
+  }
   let natW = 0, natH = 0;
   baseImg.addEventListener("load", () => {
     natW = baseImg.naturalWidth; natH = baseImg.naturalHeight;
     layoutMarker();
+    revealNow();
   });
   baseImg.addEventListener("error", () => {
     console.warn("[2D] Файл не найден: " + imagePath + ". Показана заглушка.");
     wrap.classList.add("no-image");
     badge.textContent = "Файл не найден: " + imagePath;
     badge.classList.remove("hidden");
+    revealNow(); // заглушка тоже должна появиться, а не остаться невидимой
   });
   baseImg.src = imagePath;
 

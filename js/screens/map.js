@@ -1,13 +1,29 @@
 // ============================================================
 // Интерактивная карта (ТЗ п.9). Метки объектов берутся из
 // content.js (hotspot.x/y — проценты от области карты).
+//
+// Два режима отображения метки — выбираются автоматически:
+//   - data.hotspotImage задан  → кликабельна вся картинка объекта
+//     (PNG с прозрачностью), подсветка идёт по её реальному контуру
+//     (CSS drop-shadow работает по alpha-каналу картинки, отдельная
+//     SVG-обводка не нужна);
+//   - не задан → как раньше, круглая кнопка с эмодзи.
+// Если файл по hotspotImage не найден — тихий откат на круглую кнопку.
+//
+// При касании — короткая «разгонка» перед переходом (карта
+// притемняется, выбранный объект подсвечивается сильнее и чуть
+// увеличивается), и только потом происходит сам переход на экран
+// объекта — вместо мгновенного жёсткого переключения.
 // ============================================================
 import { createOnceHint } from "../utils/hints.js";
+
+const SELECT_DELAY_MS = 380;
 
 export function initMapScreen(container, mapData, objects, onSelect, onAuthors) {
   container.innerHTML = `
     <div class="map-stage">
       <img class="map-bg" alt="" draggable="false">
+      <div class="map-scrim"></div>
       <div class="hotspots-layer"></div>
       <div class="map-caption">коснитесь объекта на карте кургана</div>
       <button class="btn authors-fab">Авторы</button>
@@ -27,21 +43,52 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors) 
   });
   bg.src = mapData.background;
 
+  function roundMarkup(data) {
+    return `<div class="ring"></div><div class="ring2"></div>
+      <div class="glyph">${data.icon || "◆"}</div>
+      <div class="label">${data.title}</div>`;
+  }
+
+  let transitioning = false; // блокируем повторный тап, пока идёт «разгонка»
+
+  function selectHotspot(id, el) {
+    if (transitioning) return;
+    transitioning = true;
+    stage.classList.add("selecting");
+    el.classList.add("selected");
+    setTimeout(() => onSelect(id), SELECT_DELAY_MS);
+  }
+
   Object.entries(objects).forEach(([id, data]) => {
     const hs = document.createElement("div");
     hs.className = "hotspot";
     hs.style.left = data.hotspot.x + "%";
     hs.style.top = data.hotspot.y + "%";
-    hs.innerHTML = `
-      <div class="ring"></div><div class="ring2"></div>
-      <div class="glyph">${data.icon || "◆"}</div>
-      <div class="label">${data.title}</div>
-    `;
-    hs.addEventListener("pointerdown", () => onSelect(id));
+    if (data.hotspotWidth) hs.style.setProperty("--hs-w", data.hotspotWidth + "px");
+
+    if (data.hotspotImage) {
+      hs.classList.add("hotspot-image-mode");
+      hs.innerHTML = `
+        <img class="hotspot-cutout" src="${data.hotspotImage}" alt="" draggable="false">
+        <div class="label">${data.title}</div>
+      `;
+      hs.querySelector(".hotspot-cutout").addEventListener("error", () => {
+        console.warn("[map] Файл не найден: " + data.hotspotImage + ". Показана круглая кнопка вместо картинки-вырезки.");
+        hs.classList.remove("hotspot-image-mode");
+        hs.innerHTML = roundMarkup(data);
+      });
+    } else {
+      hs.innerHTML = roundMarkup(data);
+    }
+
+    hs.addEventListener("pointerdown", () => selectHotspot(id, hs));
     layer.appendChild(hs);
   });
 
-  authorsBtn.addEventListener("pointerdown", onAuthors);
+  authorsBtn.addEventListener("pointerdown", () => {
+    if (transitioning) return;
+    onAuthors();
+  });
 
   const hint = createOnceHint(hintEl, layer);
   hint.show();

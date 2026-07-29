@@ -19,10 +19,17 @@
 //   - удержание пальца без движения не считается новым действием.
 // ============================================================
 
+import { getCachedModel } from "../utils/preload.js";
+
 const IDLE_RESET_MS = 10000;
 
 export async function initObjectStage3D(container, { modelPath, icon }) {
   container.innerHTML = "";
+  // Сбрасываем анимацию появления с прошлого показа — контейнер (#stage3d)
+  // переиспользуется при каждом открытии объекта, класс "revealed" мог
+  // остаться от предыдущего раза (тот же класс паттерна бага, что был
+  // с видео — см. js/screens/video.js).
+  container.classList.remove("revealed");
 
   let THREE, GLTFLoader;
   try {
@@ -82,19 +89,39 @@ function initRealStage(container, THREE, GLTFLoader, modelPath, icon) {
   }
 
   const loader = new GLTFLoader();
-  loader.load(
-    modelPath,
-    (gltf) => { pivot.add(gltf.scene); frameObject(gltf.scene); },
-    undefined,
-    (err) => {
-      console.warn("[3D] Не удалось загрузить " + modelPath + ". Показана временная геометрия.", err);
-      badge.textContent = "Файл не найден: " + modelPath;
-      badge.classList.remove("hidden");
-      const geo = new THREE.IcosahedronGeometry(1, 1);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xc9a15a, metalness: 0.35, roughness: 0.4 });
-      pivot.add(new THREE.Mesh(geo, mat));
-    }
-  );
+
+  // Анимация появления (см. css/style.css → .stage-3d.revealed) должна
+  // сыграть ровно в момент, когда модель реально готова — а не в момент
+  // открытия экрана. Раньше её не было вовсе, поэтому модель просто
+  // «выскакивала» на экране в непредсказуемый момент после загрузки.
+  function revealNow() {
+    requestAnimationFrame(() => container.classList.add("revealed"));
+  }
+
+  const cached = getCachedModel(modelPath);
+  if (cached) {
+    // Модель уже была предзагружена и распарсена заранее (см. js/utils/preload.js) —
+    // добавляем клон мгновенно, без обращения к сети.
+    pivot.add(cached);
+    frameObject(cached);
+    revealNow();
+  } else {
+    // Предзагрузка ещё не завершилась (или её не было) — грузим как раньше.
+    loader.load(
+      modelPath,
+      (gltf) => { pivot.add(gltf.scene); frameObject(gltf.scene); revealNow(); },
+      undefined,
+      (err) => {
+        console.warn("[3D] Не удалось загрузить " + modelPath + ". Показана временная геометрия.", err);
+        badge.textContent = "Файл не найден: " + modelPath;
+        badge.classList.remove("hidden");
+        const geo = new THREE.IcosahedronGeometry(1, 1);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xc9a15a, metalness: 0.35, roughness: 0.4 });
+        pivot.add(new THREE.Mesh(geo, mat));
+        revealNow();
+      }
+    );
+  }
 
   function resize() {
     const w = container.clientWidth, h = container.clientHeight;
@@ -269,6 +296,7 @@ function initPlaceholderStage(container, icon, modelPath) {
   apply();
   loop();
   scheduleIdleReset();
+  requestAnimationFrame(() => container.classList.add("revealed"));
 
   return {
     destroy() {
