@@ -128,8 +128,11 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .stage-2d{position:relative; flex:0 0 46%; border-radius:8px; overflow:hidden;
   border:1px solid var(--line); background:#100d09;}
 .canvas2d-wrap{position:absolute; inset:0; overflow:hidden; touch-action:none;}
-.canvas2d-img{position:absolute; top:50%; left:50%; max-width:none; height:120%;
-  transform:translate(-50%,-50%); transform-origin:center;}
+.canvas2d-pan{position:absolute; inset:0; transform-origin:center center; will-change:transform;}
+.canvas2d-img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+  pointer-events:none;}
+.restored-img{opacity:0; transition:opacity 850ms ease;}
+.restored-img.show{opacity:1;}
 .canvas2d-wrap.no-image .canvas2d-img{display:none;}
 .canvas2d-wrap.no-image::before{content:""; position:absolute; inset:0;
   background:
@@ -138,6 +141,20 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   background-blend-mode:multiply;}
 .canvas2d-wrap.no-image::after{content:""; position:absolute; inset:12%; border:6px double var(--gold);
   opacity:.6;}
+
+/* --- метка повреждённого участка ковра («дырка») --- */
+.hole-marker{position:absolute; width:54px; height:54px; margin:-27px 0 0 -27px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3;
+  transition:opacity .35s ease;}
+.hole-marker.hidden{opacity:0; pointer-events:none;}
+.hole-marker .ring{position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--gold-bright);
+  opacity:.7; animation:pulse 2.4s ease-in-out infinite;}
+.hole-marker .ring2{position:absolute; inset:11px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--bronze) 70%);
+  box-shadow:0 0 14px rgba(230,197,129,0.7);}
+
+.stage-back-btn{position:absolute; left:12px; top:12px; z-index:5; padding:8px 14px; font-size:11px;}
+.stage-back-btn.hidden{display:none;}
 
 /* --- missing-asset badge (both stages) --- */
 .asset-missing-note{position:absolute; left:12px; bottom:12px; z-index:4;
