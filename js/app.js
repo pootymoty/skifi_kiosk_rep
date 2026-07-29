@@ -6,6 +6,7 @@ import { CONTENT } from "./data/content.js";
 import { TextPager } from "./utils/pagination.js";
 import { createOnceHint } from "./utils/hints.js";
 import { createGlobalIdleWatcher } from "./utils/idle.js";
+import { preloadAll } from "./utils/preload.js";
 import { initVideoScreen } from "./screens/video.js";
 import { initMapScreen } from "./screens/map.js";
 import { initObjectStage3D } from "./screens/object3d.js";
@@ -152,3 +153,7 @@ document.getElementById("btnBackFromAuthors").addEventListener("pointerdown", ()
 
 // ---------------- START ----------------
 startIntro();
+// Предзагрузка всех моделей/картинок — запускается один раз, параллельно
+// с показом видео, чтобы к моменту, когда пользователь дойдёт до карты
+// и начнёт открывать объекты, всё уже было готово (см. js/utils/preload.js).
+preloadAll();
