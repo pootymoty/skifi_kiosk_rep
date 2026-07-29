@@ -1,39 +1,52 @@
 // ============================================================
-// Глобальный «дежурный» таймер простоя (attract loop).
+// Глобальный «дежурный» таймер простоя (attract loop) — два режима:
 //
-// Раньше в приложении был только ОДИН таймер простоя — локальный,
-// внутри 3D-стадии (object3d.js), который сбрасывает поворот/зум
-// конкретной модели через 10 секунд бездействия. Он не имеет
-// отношения к видео и не мог его перезапускать — поэтому видео
-// «не перезапускалось»: для этого просто не было отдельного
-// механизма. Этот файл его добавляет.
+//   1. Пока после видео НЕ БЫЛО ни одного взаимодействия (не открыли
+//      ни один объект, не нажали «Авторы» и т.д.) — короткий таймер
+//      (firstTimeoutMs). Не уложились — видео запускается заново.
+//   2. Как только произошло любое первое взаимодействие — переключаемся
+//      на длинный таймер (repeatTimeoutMs), который перезапускается
+//      при КАЖДОМ следующем взаимодействии. Если после последнего
+//      взаимодействия прошло больше repeatTimeoutMs — видео запускается
+//      заново.
 //
-// Логика: слушаем pointerdown на всём документе (любое касание —
-// на карте, в 3D/2D-стадии, в тексте — событие всплывает до
-// document, так что отдельно навешивать слушатели на каждый экран
-// не нужно). Если тишина дольше timeoutMs — вызываем onIdle().
+// Слушаем pointerdown на всём document (событие всплывает и с карты,
+// и с 3D/2D-стадии, и с кнопок — отдельно вешать слушатели на каждый
+// экран не нужно).
 // ============================================================
 
-export function createGlobalIdleWatcher(timeoutMs, onIdle) {
+export function createGlobalIdleWatcher({ firstTimeoutMs, repeatTimeoutMs }, onIdle) {
   let timer = null;
   let enabled = true;
+  let hasInteracted = false; // было ли уже хоть одно взаимодействие с момента resume()
 
-  function reset() {
-    if (!enabled) return;
-    clearTimeout(timer);
-    timer = setTimeout(onIdle, timeoutMs);
+  function currentTimeout() {
+    return hasInteracted ? repeatTimeoutMs : firstTimeoutMs;
   }
 
-  function activityHandler() { reset(); }
+  function arm() {
+    if (!enabled) return;
+    clearTimeout(timer);
+    timer = setTimeout(onIdle, currentTimeout());
+  }
+
+  function activityHandler() {
+    hasInteracted = true; // с этого момента и до следующего resume() — режим «5 минут»
+    arm();
+  }
 
   document.addEventListener("pointerdown", activityHandler, { passive: true });
-  reset();
 
   return {
     // приостановить отсчёт (например, пока и так показывается видео)
     pause() { enabled = false; clearTimeout(timer); },
-    // возобновить отсчёт заново
-    resume() { enabled = true; reset(); },
+    // возобновить отсчёт «с чистого листа» — снова короткий таймер,
+    // пока не случится первое взаимодействие
+    resume() {
+      enabled = true;
+      hasInteracted = false;
+      arm();
+    },
     destroy() {
       clearTimeout(timer);
       document.removeEventListener("pointerdown", activityHandler);
