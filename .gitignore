@@ -1,7 +1,17 @@
-venv/ 
-.venv/ 
-__pycache__/ 
-*.pyc 
-.env 
-*.log
-instance/
+# ОС и редакторы
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# node, если когда-нибудь подключите инструменты сборки/линтер
+node_modules/
+npm-debug.log*
+
+# локальные архивы/бэкапы, которые иногда тянутся при выгрузке с сервера
+*.zip
+*.tar.gz
+*.bak
