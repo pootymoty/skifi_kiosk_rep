@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Скифы Алтая. Древности Сибири</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== ВИДЕО-ЗАСТАВКА ===================== -->
+  <section class="screen active" id="screen-video"></section>
+
+  <!-- ===================== КАРТА (ТЗ п.9) ===================== -->
+  <section class="screen" id="screen-map">
+    <div class="topbar">
+      <div class="topbar-spacer"></div>
+      <div class="site-title">
+        <span class="eyebrow">Интерактивная экспозиция</span>
+        <h1>Скифы Алтая · Древности Сибири</h1>
+      </div>
+      <div class="topbar-spacer"></div>
+    </div>
+    <div class="map-mount"></div>
+  </section>
+
+  <!-- ===================== ЭКРАН ОБЪЕКТА — общий шаблон (ТЗ п.9-10) ===================== -->
+  <section class="screen" id="screen-object">
+    <div class="topbar">
+      <button class="btn ghost btn-back" id="btnBackFromObject">Назад</button>
+      <div class="site-title"><h1 class="obj-title" id="objTitle">Объект</h1></div>
+      <div class="topbar-spacer"></div>
+    </div>
+    <div class="obj-body">
+
+      <div class="stage-3d" id="stage3d"></div>
+      <div class="stage-2d" id="stage2d"></div>
+
+      <div class="text-panel">
+        <div class="text-slider">
+          <button class="text-arrow" id="txtPrev" aria-label="Предыдущий блок">‹</button>
+          <div class="text-content">
+            <h3 id="txtHeading">—</h3>
+            <p id="txtBody">—</p>
+          </div>
+          <button class="text-arrow" id="txtNext" aria-label="Следующий блок">›</button>
+        </div>
+        <div class="dots" id="txtDots"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== АВТОРЫ (ТЗ п.15) ===================== -->
+  <section class="screen" id="screen-authors">
+    <div class="topbar">
+      <button class="btn ghost btn-back" id="btnBackFromAuthors">Назад</button>
+      <div class="site-title"><h1>Авторы проекта</h1></div>
+      <div class="topbar-spacer"></div>
+    </div>
+    <div class="authors-body"></div>
+  </section>
+
+</div>
+
+<!--
+  Import map: локальные модули Three.js (см. README.md → «Подключение Three.js»).
+  Пока файлы не добавлены в js/vendor/ — приложение работает в режиме
+  заглушки (см. js/screens/object3d.js), ничего не ломается.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./js/vendor/three.module.js",
+    "three/addons/": "./js/vendor/addons/"
+  }
+}
+</script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
