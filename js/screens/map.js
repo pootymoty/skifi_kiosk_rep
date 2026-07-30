@@ -26,7 +26,8 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       <div class="map-scrim"></div>
       <div class="hotspots-layer"></div>
       <div class="map-caption-group">
-        <div class="map-heading">${mapData.heading || ""}</div>
+        <span class="eyebrow map-eyebrow">Интерактивная экспозиция</span>
+        <h1 class="map-title">Скифы Алтая · Древности Сибири</h1>
         <div class="map-caption">${mapData.caption || ""}</div>
       </div>
       <button class="btn authors-fab">Авторы</button>
