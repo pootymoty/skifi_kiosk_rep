@@ -47,6 +47,12 @@ export function createGlobalIdleWatcher({ firstTimeoutMs, repeatTimeoutMs }, onI
       hasInteracted = false;
       arm();
     },
+    // переключить на короткий таймер (20 сек) — используется когда
+    // пользователь вручную нажал кнопку перезапуска видео
+    resetToFirstTimeout() {
+      hasInteracted = false;
+      arm();
+    },
     destroy() {
       clearTimeout(timer);
       document.removeEventListener("pointerdown", activityHandler);

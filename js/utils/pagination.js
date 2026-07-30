@@ -15,6 +15,7 @@ export class TextPager {
   constructor(refs) {
     this.heading = refs.heading;
     this.body = refs.body;
+    this.location = refs.location || null; // необязательно — маленькая подпись "место хранения"
     this.dots = refs.dots;
     this.prevBtn = refs.prevBtn;
     this.nextBtn = refs.nextBtn;
@@ -44,6 +45,15 @@ export class TextPager {
     if (!s) return;
     this.heading.textContent = s.h;
     this.body.textContent = s.t;
+    if (this.location) {
+      if (s.location) {
+        this.location.textContent = s.location;
+        this.location.classList.remove("hidden");
+      } else {
+        this.location.textContent = "";
+        this.location.classList.add("hidden");
+      }
+    }
     this.prevBtn.disabled = this.page === 0;
     this.nextBtn.disabled = this.page === this.sections.length - 1;
 
