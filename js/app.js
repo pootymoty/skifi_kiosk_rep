@@ -134,7 +134,7 @@ async function openObject(id) {
   if (data.layout === "beast-grid") {
     objStandardEl.style.display = "none";
     objCustomEl.classList.remove("hidden");
-    stageController = await initBeastGrid(objCustomEl, { models: data.models, sections: data.sections });
+    stageController = await initBeastGrid(objCustomEl, { models: data.models, texts: data.texts });
 
   } else if (data.layout === "human-split") {
     objStandardEl.style.display = "none";
