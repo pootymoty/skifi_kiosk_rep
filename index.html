@@ -78,6 +78,21 @@
   Пока файлы не добавлены в js/vendor/ — приложение работает в режиме
   заглушки (см. js/screens/object3d.js), ничего не ломается.
 -->
+<!--
+  Фикс мобильных браузеров: 100vh не учитывает то, что адресная строка
+  может появляться/исчезать, из-за чего часть интерфейса (в т.ч. поля
+  под 3D-модели) может обрезаться. Дублирует то же самое, что делает
+  100dvh в современных браузерах, но работает и в старых — считаем
+  реальную высоту окна и кладём в CSS-переменную --vh.
+-->
+<script>
+  function setVh() {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+  }
+  setVh();
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', setVh);
+</script>
 <script type="importmap">
 {
   "imports": {
