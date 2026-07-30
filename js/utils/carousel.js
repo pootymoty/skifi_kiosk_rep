@@ -9,7 +9,7 @@
 //     приостанавливается и возобновляется через resumeMs простоя.
 // ============================================================
 
-export function createCarousel(container, slides, { autoMs = 10000, resumeMs = 20000 } = {}) {
+export function createCarousel(container, slides, { autoMs = 10000, resumeMs = 20000, onChange } = {}) {
   container.innerHTML = `
     <div class="carousel-track"></div>
     <div class="carousel-dots"></div>
@@ -52,8 +52,11 @@ export function createCarousel(container, slides, { autoMs = 10000, resumeMs = 2
   }
 
   function goTo(i, isUserAction) {
-    index = ((i % slides.length) + slides.length) % slides.length;
+    const next = ((i % slides.length) + slides.length) % slides.length;
+    const changed = next !== index;
+    index = next;
     apply();
+    if (changed && onChange) onChange(index, slides[index]);
     if (isUserAction) pauseThenResume();
   }
 
@@ -92,6 +95,7 @@ export function createCarousel(container, slides, { autoMs = 10000, resumeMs = 2
   container.addEventListener("pointercancel", endDrag);
 
   apply();
+  if (onChange) onChange(index, slides[index]);
   scheduleAuto();
 
   return {
