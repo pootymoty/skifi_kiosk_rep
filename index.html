@@ -28,26 +28,34 @@
   <!-- ===================== ЭКРАН ОБЪЕКТА — общий шаблон (ТЗ п.9-10) ===================== -->
   <section class="screen" id="screen-object">
     <div class="topbar">
-      <button class="btn ghost btn-back" id="btnBackFromObject">Назад</button>
+      <div class="topbar-spacer"></div>
       <div class="site-title"><h1 class="obj-title" id="objTitle">Объект</h1></div>
       <div class="topbar-spacer"></div>
     </div>
+    <button class="btn ghost btn-back" id="btnBackFromObject">Назад</button>
     <div class="obj-body">
 
-      <div class="stage-3d" id="stage3d"></div>
-      <div class="stage-2d" id="stage2d"></div>
+      <!-- Стандартная раскладка (объекты без своего layout) -->
+      <div class="obj-standard" id="objStandard">
+        <div class="stage-3d" id="stage3d"></div>
+        <div class="stage-2d" id="stage2d"></div>
 
-      <div class="text-panel">
-        <div class="text-slider">
-          <button class="text-arrow" id="txtPrev" aria-label="Предыдущий блок">‹</button>
-          <div class="text-content">
-            <h3 id="txtHeading">—</h3>
-            <p id="txtBody">—</p>
+        <div class="text-panel">
+          <div class="text-slider">
+            <button class="text-arrow" id="txtPrev" aria-label="Предыдущий блок">‹</button>
+            <div class="text-content">
+              <h3 id="txtHeading">—</h3>
+              <p id="txtBody">—</p>
+              <p id="txtLocation" class="txt-location"></p>
+            </div>
+            <button class="text-arrow" id="txtNext" aria-label="Следующий блок">›</button>
           </div>
-          <button class="text-arrow" id="txtNext" aria-label="Следующий блок">›</button>
+          <div class="dots" id="txtDots"></div>
         </div>
-        <div class="dots" id="txtDots"></div>
       </div>
+
+      <!-- Особые раскладки: beast-grid / human-split / carpet-split (см. js/app.js) -->
+      <div class="obj-custom hidden" id="objCustom"></div>
 
     </div>
   </section>
@@ -55,10 +63,11 @@
   <!-- ===================== АВТОРЫ (ТЗ п.15) ===================== -->
   <section class="screen" id="screen-authors">
     <div class="topbar">
-      <button class="btn ghost btn-back" id="btnBackFromAuthors">Назад</button>
+      <div class="topbar-spacer"></div>
       <div class="site-title"><h1>Авторы проекта</h1></div>
       <div class="topbar-spacer"></div>
     </div>
+    <button class="btn ghost btn-back" id="btnBackFromAuthors">Назад</button>
     <div class="authors-body"></div>
   </section>
 
