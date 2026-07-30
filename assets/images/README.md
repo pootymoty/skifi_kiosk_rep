@@ -11,11 +11,12 @@
                                   см. content.js → carpet.hole.patchImage
     authors-qr.png             — QR-код (предположительно на Telegram-канал, ТЗ п.15)
 
-    clothing/item-1.png        — карусель элементов одежды на экране «Человек»
-    clothing/item-2.png          (PNG с прозрачным фоном), см. content.js →
-    clothing/item-3.png          objects.human.clothingCarousel — можно
-                                  добавить любое количество слайдов, просто
-                                  дописав элементы в этот массив
+    clothing/skirt.png         — карусель элементов одежды на экране «Человек»
+    clothing/cape.png            (PNG с прозрачным фоном), см. content.js →
+    clothing/hat.png              objects.human.clothingCarousel — 6 элементов:
+    clothing/shirt.png            юбка, накидка, шапка, рубашка, сапоги, кинжал.
+    clothing/boots.png            Можно добавить ещё, просто дописав элемент
+    clothing/dagger.png           в этот массив (image + caption + sections)
 
 Координаты самой «дырки» (`hole.x` / `hole.y` в `content.js`, в
 процентах от размеров `carpet.jpg`) сейчас стоят примерные —
