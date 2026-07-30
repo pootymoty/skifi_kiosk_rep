@@ -1,21 +1,28 @@
 // ============================================================
 // 3D-стадия объекта (ТЗ п.11 «Пантера», п.12 «Человек»).
 //
+// Два режима — выбираются автоматически по форме входных данных:
+//   - opts.modelPath (одна модель)  → как раньше, модель на весь экран
+//     (сейчас используется для «Человек»).
+//   - opts.models: [{modelPath, icon, label}, ...] (несколько моделей)
+//     → сетка ячеек, в каждой — своя независимая модель. Используется
+//     для экрана «Скифский звериный стиль» (пантера/олень/третья
+//     модель — см. content.js → objects.panther.models).
+//
 // Ожидается, что в js/vendor/ будут положены модули Three.js
 // (см. README.md — раздел «Подключение Three.js»). До этого момента
 // код работает в режиме заглушки: рисует условную геометрию вместо
-// .glb, чтобы весь остальной интерфейс можно было тестировать уже
-// сейчас. Как только vendor-файлы появятся — заглушка сама уступит
-// место настоящему рендеру, без правок кода.
+// .glb — заглушка сама уступит место настоящему рендеру, без правок
+// кода, как только vendor-файлы появятся.
 //
-// Логика взаимодействия (общая что для реальной модели, что для
-// геометрии-заглушки):
+// Логика взаимодействия одинаковая и для одиночной модели, и для
+// КАЖДОЙ ячейки сетки НЕЗАВИСИМО друг от друга:
 //   - вращение пальцем (drag);
 //   - масштабирование двумя пальцами (pinch);
 //   - автовращение включено после открытия экрана;
-//   - выключается при первом касании;
-//   - при 10 секундах бездействия — сброс положения и возобновление
-//     автовращения;
+//   - выключается при первом касании ИМЕННО этой модели;
+//   - при 10 секундах бездействия ИМЕННО этой модели — сброс
+//     положения и возобновление автовращения;
 //   - удержание пальца без движения не считается новым действием.
 // ============================================================
 
@@ -23,13 +30,34 @@ import { getCachedModel } from "../utils/preload.js";
 
 const IDLE_RESET_MS = 10000;
 
-export async function initObjectStage3D(container, { modelPath, icon }) {
+export async function initObjectStage3D(container, opts) {
   container.innerHTML = "";
-  // Сбрасываем анимацию появления с прошлого показа — контейнер (#stage3d)
-  // переиспользуется при каждом открытии объекта, класс "revealed" мог
-  // остаться от предыдущего раза (тот же класс паттерна бага, что был
-  // с видео — см. js/screens/video.js).
-  container.classList.remove("revealed");
+  container.classList.remove("revealed", "multi-mode");
+
+  if (opts.models && opts.models.length) {
+    container.classList.add("multi-mode");
+    const controllers = await Promise.all(opts.models.map(async (m) => {
+      const cell = document.createElement("div");
+      cell.className = "stage-3d-cell";
+      container.appendChild(cell);
+      return mountModelViewer(cell, m);
+    }));
+    return {
+      destroy() { controllers.forEach((c) => c.destroy()); }
+    };
+  }
+
+  // Одиночная модель на весь экран (обратная совместимость, напр. «Человек»)
+  return mountModelViewer(container, opts);
+}
+
+/**
+ * Монтирует ОДНУ модель в произвольный элемент — используется и для
+ * одиночной модели на весь экран, и для отдельной ячейки в сетке/шахматке
+ * (см. js/screens/beastGrid.js). Сам решает, THREE.js доступен или нет.
+ */
+export async function mountModelViewer(mountEl, opts) {
+  mountEl.classList.remove("revealed");
 
   let THREE, GLTFLoader;
   try {
@@ -41,24 +69,33 @@ export async function initObjectStage3D(container, { modelPath, icon }) {
       "Показана временная геометрия вместо реальной модели. " +
       "См. README.md → «Подключение Three.js».", err
     );
-    return initPlaceholderStage(container, icon, modelPath);
+    return mountPlaceholderViewer(mountEl, opts, mountEl);
   }
 
-  return initRealStage(container, THREE, GLTFLoader, modelPath, icon);
+  return mountRealViewer(mountEl, opts, THREE, GLTFLoader, mountEl);
 }
 
 // ----------------------------------------------------------------
-// РЕАЛЬНЫЙ РЕНДЕР (Three.js + GLTFLoader)
+// РЕАЛЬНЫЙ РЕНДЕР (Three.js + GLTFLoader) — монтируется в любой
+// переданный элемент (это либо весь #stage3d для одной модели,
+// либо одна ячейка сетки для нескольких моделей).
 // ----------------------------------------------------------------
-function initRealStage(container, THREE, GLTFLoader, modelPath, icon) {
+function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader, revealTarget) {
   const badge = document.createElement("div");
   badge.className = "asset-missing-note hidden";
-  container.appendChild(badge);
+  mountEl.appendChild(badge);
+
+  if (label) {
+    const labelEl = document.createElement("div");
+    labelEl.className = "cell-label";
+    labelEl.textContent = label;
+    mountEl.appendChild(labelEl);
+  }
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.domElement.style.touchAction = "none";
-  container.appendChild(renderer.domElement);
+  mountEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
@@ -90,23 +127,20 @@ function initRealStage(container, THREE, GLTFLoader, modelPath, icon) {
 
   const loader = new GLTFLoader();
 
-  // Анимация появления (см. css/style.css → .stage-3d.revealed) должна
-  // сыграть ровно в момент, когда модель реально готова — а не в момент
-  // открытия экрана. Раньше её не было вовсе, поэтому модель просто
-  // «выскакивала» на экране в непредсказуемый момент после загрузки.
+  // Анимация появления должна сыграть ровно в момент, когда модель
+  // реально готова — а не в момент открытия экрана/ячейки.
   function revealNow() {
-    requestAnimationFrame(() => container.classList.add("revealed"));
+    requestAnimationFrame(() => revealTarget.classList.add("revealed"));
   }
 
   const cached = getCachedModel(modelPath);
   if (cached) {
-    // Модель уже была предзагружена и распарсена заранее (см. js/utils/preload.js) —
+    // Модель уже предзагружена и распарсена заранее (см. js/utils/preload.js) —
     // добавляем клон мгновенно, без обращения к сети.
     pivot.add(cached);
     frameObject(cached);
     revealNow();
   } else {
-    // Предзагрузка ещё не завершилась (или её не было) — грузим как раньше.
     loader.load(
       modelPath,
       (gltf) => { pivot.add(gltf.scene); frameObject(gltf.scene); revealNow(); },
@@ -124,17 +158,20 @@ function initRealStage(container, THREE, GLTFLoader, modelPath, icon) {
   }
 
   function resize() {
-    const w = container.clientWidth, h = container.clientHeight;
+    const w = mountEl.clientWidth, h = mountEl.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
   const ro = new ResizeObserver(resize);
-  ro.observe(container);
+  ro.observe(mountEl);
   resize();
 
   // --- взаимодействие: вращение / pinch-zoom / автовращение / сброс ---
+  // Слушатели навешаны на renderer.domElement конкретной ячейки — то
+  // есть каждая модель в сетке реагирует ТОЛЬКО на касания внутри своей
+  // ячейки, независимо от соседних моделей.
   let autoRotate = true;
   let idleTimer = null;
   let dragging = false, lastX = 0, lastY = 0;
@@ -213,18 +250,20 @@ function initRealStage(container, THREE, GLTFLoader, modelPath, icon) {
 
 // ----------------------------------------------------------------
 // ЗАГЛУШКА (пока js/vendor/three.module.js не добавлен)
-// Та же логика жестов, но без WebGL — CSS 3D-плашка.
+// Та же логика жестов, но без WebGL — CSS 3D-плашка. Тоже монтируется
+// в любой переданный элемент (весь #stage3d либо одна ячейка сетки).
 // ----------------------------------------------------------------
-function initPlaceholderStage(container, icon, modelPath) {
-  container.innerHTML = `
+function mountPlaceholderViewer(mountEl, { icon, label, modelPath }, revealTarget) {
+  mountEl.innerHTML = `
     <div class="stage-hint-icon">⟲ авто-вращение</div>
     <div class="asset-missing-note">Three.js не подключён · заглушка вместо ${modelPath}</div>
     <div class="model-card">
       <div class="model-face front"><div class="icon">${icon || "◆"}</div><div class="tag">3D-плейсхолдер</div></div>
       <div class="model-face back"><div class="icon">${icon || "◆"}</div><div class="tag">заменить на .glb</div></div>
     </div>
+    ${label ? `<div class="cell-label">${label}</div>` : ""}
   `;
-  const card = container.querySelector(".model-card");
+  const card = mountEl.querySelector(".model-card");
 
   let rot = { x: -8, y: 0 };
   let scale = 1;
@@ -253,7 +292,7 @@ function initPlaceholderStage(container, icon, modelPath) {
     rafId = requestAnimationFrame(loop);
   }
 
-  container.addEventListener("pointerdown", (e) => {
+  mountEl.addEventListener("pointerdown", (e) => {
     autoRotate = false;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
@@ -263,9 +302,9 @@ function initPlaceholderStage(container, icon, modelPath) {
       pinchStartDist = dist(pts[0], pts[1]);
       pinchStartScale = scale;
     }
-    container.setPointerCapture(e.pointerId);
+    mountEl.setPointerCapture(e.pointerId);
   });
-  container.addEventListener("pointermove", (e) => {
+  mountEl.addEventListener("pointermove", (e) => {
     if (!pointers.has(e.pointerId)) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
@@ -290,13 +329,13 @@ function initPlaceholderStage(container, icon, modelPath) {
     if (pointers.size === 0) dragging = false;
     scheduleIdleReset();
   }
-  container.addEventListener("pointerup", release);
-  container.addEventListener("pointercancel", release);
+  mountEl.addEventListener("pointerup", release);
+  mountEl.addEventListener("pointercancel", release);
 
   apply();
   loop();
   scheduleIdleReset();
-  requestAnimationFrame(() => container.classList.add("revealed"));
+  requestAnimationFrame(() => revealTarget.classList.add("revealed"));
 
   return {
     destroy() {
