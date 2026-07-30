@@ -125,6 +125,8 @@ export const CONTENT = {
       model: "assets/models/human.glb",        // ТЗ п.12
       icon: "🗿",
       hotspot: { x: 46, y: 66 },
+      hotspotImage: "assets/images/hotspots/human-cutout.png", // вырезка поверх карты
+      hotspotWidth: 130,                                        // ширина на экране в пикселях, подберите на глаз
 
       // Верхний текст левой колонки — про ТЕКУЩИЙ элемент одежды
       // (тот, что сейчас показан в карусели ниже). У каждого элемента
