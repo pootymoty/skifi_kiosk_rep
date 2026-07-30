@@ -11,6 +11,9 @@ import { initVideoScreen } from "./screens/video.js";
 import { initMapScreen } from "./screens/map.js";
 import { initObjectStage3D } from "./screens/object3d.js";
 import { initObjectStage2D } from "./screens/object2d.js";
+import { initCarpetSplit } from "./screens/carpetSplit.js";
+import { initHumanSplit } from "./screens/humanSplit.js";
+import { initBeastGrid } from "./screens/beastGrid.js";
 import { initAuthorsScreen } from "./screens/authors.js";
 
 // Таймеры простоя (attract loop). Два режима — см. js/utils/idle.js:
@@ -98,8 +101,10 @@ function goMap() {
   showScreen("map");
 }
 
-// ---------------- OBJECT (общий шаблон, ТЗ п.9-10) ----------------
+// ---------------- OBJECT (общий шаблон, ТЗ п.9-10, + особые раскладки) ----------------
 const objTitleEl = document.getElementById("objTitle");
+const objStandardEl = document.getElementById("objStandard");
+const objCustomEl = document.getElementById("objCustom");
 const stage3dEl = document.getElementById("stage3d");
 const stage2dEl = document.getElementById("stage2d");
 const backBtn = document.getElementById("btnBackFromObject");
@@ -107,6 +112,7 @@ const backBtn = document.getElementById("btnBackFromObject");
 const pager = new TextPager({
   heading: document.getElementById("txtHeading"),
   body: document.getElementById("txtBody"),
+  location: document.getElementById("txtLocation"),
   dots: document.getElementById("txtDots"),
   prevBtn: document.getElementById("txtPrev"),
   nextBtn: document.getElementById("txtNext")
@@ -119,26 +125,51 @@ async function openObject(id) {
   if (!data) { console.error("[app] Неизвестный объект: " + id); return; }
 
   objTitleEl.textContent = data.title;
-  pager.setSections(data.sections);
 
   if (stageController && typeof stageController.destroy === "function") {
     stageController.destroy();
   }
   stageController = null;
 
-  const is3d = data.type === "3d";
-  stage3dEl.style.display = is3d ? "flex" : "none";
-  stage2dEl.style.display = is3d ? "none" : "block";
+  if (data.layout === "beast-grid") {
+    objStandardEl.style.display = "none";
+    objCustomEl.classList.remove("hidden");
+    stageController = await initBeastGrid(objCustomEl, { models: data.models, sections: data.sections });
 
-  if (is3d) {
-    stageController = await initObjectStage3D(stage3dEl, { modelPath: data.model, icon: data.icon });
+  } else if (data.layout === "human-split") {
+    objStandardEl.style.display = "none";
+    objCustomEl.classList.remove("hidden");
+    stageController = await initHumanSplit(objCustomEl, data);
+
+  } else if (data.layout === "carpet-split") {
+    objStandardEl.style.display = "none";
+    objCustomEl.classList.remove("hidden");
+    stageController = initCarpetSplit(objCustomEl, data);
+
   } else {
-    stageController = initObjectStage2D(stage2dEl, {
-      imagePath: data.image,
-      hole: data.hole,
-      baseSections: data.sections,
-      onSectionsChange: (sections) => pager.setSections(sections)
-    });
+    // Стандартный шаблон (на случай новых объектов без своей раскладки)
+    objCustomEl.classList.add("hidden");
+    objCustomEl.innerHTML = "";
+    objStandardEl.style.display = "flex";
+
+    pager.setSections(data.sections);
+    const is3d = data.type === "3d";
+    stage3dEl.style.display = is3d ? "flex" : "none";
+    stage2dEl.style.display = is3d ? "none" : "block";
+
+    if (is3d) {
+      stageController = await initObjectStage3D(stage3dEl, data.models
+        ? { models: data.models }
+        : { modelPath: data.model, icon: data.icon }
+      );
+    } else {
+      stageController = initObjectStage2D(stage2dEl, {
+        imagePath: data.image,
+        hole: data.hole,
+        baseSections: data.sections,
+        onSectionsChange: (sections) => pager.setSections(sections)
+      });
+    }
   }
 
   showScreen("object");

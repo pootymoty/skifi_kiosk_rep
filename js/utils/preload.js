@@ -25,11 +25,17 @@ export function preloadAll() {
     CONTENT.map.background,
     CONTENT.authors.qr,
     ...Object.values(CONTENT.objects).map(o => o.image),
-    ...Object.values(CONTENT.objects).map(o => o.hole && o.hole.restoredImage)
+    ...Object.values(CONTENT.objects).map(o => o.hole && o.hole.patchImage),
+    ...Object.values(CONTENT.objects).flatMap(o =>
+      o.clothingCarousel ? o.clothingCarousel.map(c => c.image) : []
+    )
   ].filter(Boolean);
   imagePaths.forEach(preloadImage);
 
-  const modelPaths = Object.values(CONTENT.objects).map(o => o.model).filter(Boolean);
+  const modelPaths = Object.values(CONTENT.objects).flatMap(o => {
+    if (o.models) return o.models.map(m => m.modelPath).filter(Boolean); // сетка из нескольких моделей
+    return o.model ? [o.model] : [];                                     // одиночная модель
+  });
   if (modelPaths.length) preloadModels(modelPaths);
 }
 

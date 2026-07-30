@@ -25,7 +25,10 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       <img class="map-bg" alt="" draggable="false">
       <div class="map-scrim"></div>
       <div class="hotspots-layer"></div>
-      <div class="map-caption">коснитесь объекта на карте кургана</div>
+      <div class="map-caption-group">
+        <div class="map-heading">${mapData.heading || ""}</div>
+        <div class="map-caption">${mapData.caption || ""}</div>
+      </div>
       <button class="btn authors-fab">Авторы</button>
       <button class="btn restart-video-fab" title="Переиграть видео-заставку">▶ Видео</button>
       <div class="hint-toast map-hint">Нажмите на объект, чтобы узнать больше</div>

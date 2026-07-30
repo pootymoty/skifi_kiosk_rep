@@ -1,25 +1,18 @@
 // ============================================================
 // 2D-стадия объекта «Ковёр» (ТЗ п.13 + доработка «дырки»).
 //
-// Изменения по вашему запросу:
-// 1. Раньше картинка лежала на холсте, искусственно увеличенном
-//    до 220% — из-за этого область, где «лежит» ковёр, была больше
-//    самой картинки, и можно было утащить её далеко за пределы
-//    видимой области. Теперь используется настоящий contain-фит:
-//    в состоянии покоя (zoom = 1) картинка ровно вписана в область
-//    по своим фактическим краям, панорамирование при увеличении
-//    жёстко ограничено этими же краями — утащить изображение
-//    «в никуда» больше нельзя.
-// 2. Добавлена интерактивная зона (см. content.js → carpet.hole):
-//    подсвеченная метка на месте повреждения ковра. При касании —
-//    плавное приближение именно к этой точке, кросс-фейд на картинку
-//    с восстановленным участком и отдельный текстовый блок про
-//    реставрацию. Кнопка «Ковёр целиком» возвращает к общему виду.
+// 1. Contain-фит: в состоянии покоя (zoom = 1) картинка ровно вписана
+//    в область по своим фактическим краям, панорамирование при
+//    увеличении жёстко ограничено этими же краями.
+// 2. Интерактивная зона (см. content.js → carpet.hole): подсвеченная
+//    метка на месте повреждения ковра. При касании открывается ОТДЕЛЬНАЯ
+//    картинка — именно вырезанный восстановленный фрагмент (не весь
+//    ковёр), по центру области, с подписью под ней. Кнопка «Ковёр
+//    целиком» возвращает к обычному виду.
 // ============================================================
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
-const DETAIL_TRANSITION_MS = 850;
 
 export function initObjectStage2D(container, { imagePath, hole, baseSections, onSectionsChange }) {
   // Сбрасываем анимацию появления с прошлого показа — контейнер
@@ -30,23 +23,30 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     <div class="canvas2d-wrap">
       <div class="canvas2d-pan">
         <img class="canvas2d-img base-img" alt="" draggable="false">
-        <img class="canvas2d-img restored-img" alt="" draggable="false">
         <div class="hole-marker hidden">
           <div class="ring"></div><div class="ring2"></div>
         </div>
       </div>
+      <div class="hole-detail-overlay hidden">
+        <img class="hole-detail-img" alt="" draggable="false">
+        <div class="hole-detail-caption"></div>
+        <div class="asset-missing-note hidden"></div>
+      </div>
       <button class="btn ghost stage-back-btn hidden">‹ Ковёр целиком</button>
-      <div class="asset-missing-note hidden"></div>
+      <div class="asset-missing-note base-missing hidden"></div>
     </div>
   `;
 
   const wrap = container.querySelector(".canvas2d-wrap");
   const pan = container.querySelector(".canvas2d-pan");
   const baseImg = container.querySelector(".base-img");
-  const restoredImg = container.querySelector(".restored-img");
   const marker = container.querySelector(".hole-marker");
   const backBtn = container.querySelector(".stage-back-btn");
-  const badge = container.querySelector(".asset-missing-note");
+  const badge = container.querySelector(".base-missing");
+  const detailOverlay = container.querySelector(".hole-detail-overlay");
+  const detailImg = container.querySelector(".hole-detail-img");
+  const detailCaption = container.querySelector(".hole-detail-caption");
+  const detailBadge = detailOverlay.querySelector(".asset-missing-note");
 
   // ---------------- загрузка изображений ----------------
   function revealNow() {
@@ -67,14 +67,17 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   });
   baseImg.src = imagePath;
 
-  if (hole && hole.restoredImage) {
-    restoredImg.addEventListener("error", () => {
-      console.warn("[2D] Файл не найден: " + hole.restoredImage + ". Приближение сработает без смены картинки.");
-      restoredImageBroken = true;
+  if (hole && hole.patchImage) {
+    detailImg.addEventListener("error", () => {
+      console.warn("[2D] Файл не найден: " + hole.patchImage);
+      detailBadge.textContent = "Файл не найден: " + hole.patchImage;
+      detailBadge.classList.remove("hidden");
     });
-    restoredImg.src = hole.restoredImage;
+    detailImg.src = hole.patchImage;
+    if (hole.sections && hole.sections[0]) {
+      detailCaption.textContent = hole.sections[0].h;
+    }
   }
-  let restoredImageBroken = false;
 
   // ---------------- метка «дырки» на карте (позиция в % от картинки) ----------------
   function layoutMarker() {
@@ -96,10 +99,9 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const ro = new ResizeObserver(layoutMarker);
   ro.observe(wrap);
 
-  // ---------------- состояние трансформации (общее для обзора и детали) ----------------
+  // ---------------- состояние трансформации (только для обзора ковра) ----------------
   let tx = 0, ty = 0, scale = 1;
   let inDetail = false;
-  let animating = false;
 
   function clamp() {
     const cw = wrap.clientWidth, ch = wrap.clientHeight;
@@ -111,50 +113,23 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   function apply() {
     pan.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
   }
-  function animateTo(targetTx, targetTy, targetScale, onDone) {
-    animating = true;
-    pan.style.transition = `transform ${DETAIL_TRANSITION_MS}ms cubic-bezier(.4,0,.2,1)`;
-    tx = targetTx; ty = targetTy; scale = targetScale;
-    apply();
-    setTimeout(() => {
-      pan.style.transition = "";
-      animating = false;
-      if (onDone) onDone();
-    }, DETAIL_TRANSITION_MS);
-  }
 
-  // ---------------- вход/выход из «детали» (дырка → восстановленный участок) ----------------
+  // ---------------- вход/выход из «детали» (дырка → отдельная картинка фрагмента) ----------------
   function enterDetail() {
-    if (!hole || inDetail || animating) return;
+    if (!hole || inDetail) return;
     inDetail = true;
-    marker.classList.add("hidden");
     backBtn.classList.remove("hidden");
-
-    const cw = wrap.clientWidth, ch = wrap.clientHeight;
-    const centerX = cw / 2, centerY = ch / 2;
-    const markerX = parseFloat(marker.style.left), markerY = parseFloat(marker.style.top);
-    const targetScale = hole.zoom || 2.2;
-    // Приближение к точке при transform-origin: center (см. CSS) —
-    // чтобы точка markerX/markerY после масштабирования оказалась
-    // точно в центре области: (tx,ty) = scale * (center - point).
-    const tX = targetScale * (centerX - markerX);
-    const tY = targetScale * (centerY - markerY);
-
-    animateTo(tX, tY, targetScale, () => clampAndReapply());
-
-    if (!restoredImageBroken && hole.restoredImage) {
-      restoredImg.classList.add("show");
-    }
+    detailOverlay.classList.remove("hidden");
+    requestAnimationFrame(() => detailOverlay.classList.add("show"));
     if (onSectionsChange && hole.sections) onSectionsChange(hole.sections);
   }
-  function clampAndReapply() { clamp(); apply(); }
 
   function exitDetail() {
-    if (!inDetail || animating) return;
+    if (!inDetail) return;
     inDetail = false;
     backBtn.classList.add("hidden");
-    restoredImg.classList.remove("show");
-    animateTo(0, 0, 1, () => { marker.classList.remove("hidden"); });
+    detailOverlay.classList.remove("show");
+    setTimeout(() => detailOverlay.classList.add("hidden"), 350);
     if (onSectionsChange && baseSections) onSectionsChange(baseSections);
   }
 
@@ -168,7 +143,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
   wrap.addEventListener("pointerdown", (e) => {
-    if (animating) return;
+    if (inDetail) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
     else if (pointers.size === 2) {
@@ -180,7 +155,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     wrap.setPointerCapture(e.pointerId);
   });
   wrap.addEventListener("pointermove", (e) => {
-    if (animating || !pointers.has(e.pointerId)) return;
+    if (inDetail || !pointers.has(e.pointerId)) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
       const pts = [...pointers.values()];
@@ -204,7 +179,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   wrap.addEventListener("pointercancel", release);
 
   function onWheel(e) {
-    if (animating) return;
+    if (inDetail) return;
     e.preventDefault();
     scale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, scale - e.deltaY * 0.0015));
     clamp(); apply();
