@@ -16,7 +16,10 @@
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
 html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:var(--bg);
   font-family:Georgia,'Times New Roman',serif; color:var(--text); touch-action:none;}
-#app{position:relative; width:100vw; height:100vh; overflow:hidden;
+#app{position:relative; width:100vw; overflow:hidden;
+  height:100vh;                          /* запасной вариант для старых браузеров */
+  height:100dvh;                         /* современный "настоящий" viewport-height */
+  height:calc(var(--vh, 1vh) * 100);     /* JS-фикс на случай, если dvh не поддерживается (см. index.html) */
   background:
     radial-gradient(ellipse at 20% 10%, rgba(140,106,63,0.10), transparent 55%),
     radial-gradient(ellipse at 85% 90%, rgba(201,161,90,0.08), transparent 50%),
@@ -135,7 +138,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* ================= ОБЪЕКТ ================= */
 .obj-title{font-size:20px; color:var(--parchment); text-align:center;}
-.obj-body{flex:1; display:flex; flex-direction:column; padding:0 26px 22px; min-height:0;}
+.obj-body{flex:1; display:flex; flex-direction:column; padding:0 26px 22px; min-height:0; overflow-y:auto;}
 .obj-standard{flex:1; display:flex; flex-direction:column; min-height:0; gap:14px;}
 .obj-custom{flex:1; min-height:0;}
 .obj-custom.hidden{display:none;}
@@ -266,30 +269,29 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* ================= ОСОБЫЕ РАСКЛАДКИ ОБЪЕКТОВ ================= */
 
+/* Переиспользуемый текстовый блок с пагинацией (см. js/utils/textBlock.js) —
+   использует те же .text-slider/.text-content/.dots, что и раньше. */
+.mini-text-block{display:flex; flex-direction:column; height:100%; min-height:0;}
+
 /* --- «Ковёр»: картинка в правой половине (с небольшим заходом за
    середину), текст слева, по высоте отцентрирован --- */
 .carpet-split{display:flex; height:100%; gap:18px;}
-.carpet-split .carpet-split-text{flex:0 0 38%; display:flex; flex-direction:column;
-  justify-content:center; padding-right:6px;}
-.carpet-split .carpet-split-text h3{font-size:16px; color:var(--gold-bright); margin-bottom:8px;}
-.carpet-split .carpet-split-text p{font-size:14.5px; line-height:1.6; color:var(--text); margin:0 0 14px;}
+.carpet-split .carpet-split-text{flex:0 0 38%; min-height:0; padding-right:6px;}
+.carpet-split .text-content{display:flex; flex-direction:column; justify-content:center;}
 .carpet-split .carpet-split-stage{flex:1 1 62%; position:relative; min-width:0;
   max-height:none; min-height:0; height:100%;}
 
-/* --- «Человек»: модель справа (половина экрана), слева — текст /
-   карусель / текст --- */
+/* --- «Человек»: модель справа (половина экрана), слева — карусель /
+   текст текущего элемента одежды / текст о находке --- */
 .human-split{display:flex; height:100%; gap:18px;}
 .human-split .human-split-left{flex:0 0 48%; display:flex; flex-direction:column;
   min-height:0; gap:10px;}
 .human-split .human-split-stage{flex:1 1 52%; position:relative; min-width:0;
   max-height:none; min-height:0; height:100%;}
-.human-text{flex:0 0 auto;}
-.human-text h3{font-size:15px; color:var(--gold-bright); margin-bottom:6px;}
-.human-text p{font-size:13.5px; line-height:1.5; color:var(--text); margin:0;}
-.human-text-top{max-height:32%; overflow-y:auto;}
-.human-text-bottom{max-height:32%; overflow-y:auto;}
-.human-carousel{flex:1; position:relative; min-height:120px; border-radius:8px; overflow:hidden;
+.human-carousel{flex:1 1 42%; position:relative; min-height:140px; border-radius:8px; overflow:hidden;
   border:1px solid var(--line); background:#100d09;}
+.human-item-text{flex:1 1 29%; min-height:0;}
+.human-about-text{flex:1 1 29%; min-height:0; border-top:1px solid var(--line); padding-top:8px;}
 .carousel-track{position:absolute; inset:0; display:flex; transition:transform .5s cubic-bezier(.4,0,.2,1);
   touch-action:pan-y;}
 .carousel-slide{flex:0 0 100%; position:relative; display:flex; align-items:center; justify-content:center;}
@@ -317,12 +319,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .beast-cell.area-m2{grid-area:m2;}
 .beast-cell.area-t3{grid-area:t3;}
 .beast-cell.area-m3{grid-area:m3;}
-.beast-cell.area-t4{grid-area:t4; text-align:center;}
-.beast-text{display:flex; flex-direction:column; justify-content:center; padding:6px 10px; min-height:0; overflow-y:auto;}
-.beast-text h3{font-size:14px; color:var(--gold-bright); margin-bottom:6px;}
-.beast-text p{font-size:12.5px; line-height:1.5; color:var(--text); margin:0;}
-.beast-text.area-t4{align-items:center;}
-.beast-text.area-t4 p{max-width:640px;}
+.beast-cell.area-t4{grid-area:t4; min-height:130px;}
+.beast-text{min-height:0; overflow:hidden;}
+.beast-text .text-content h3{font-size:14px;}
+.beast-text .text-content p{font-size:12.5px; line-height:1.5;}
+.beast-text.area-t4 .text-content{align-items:center; text-align:center;}
+.beast-text.area-t4 .text-content p{max-width:640px; margin-left:auto; margin-right:auto;}
 .beast-model{position:relative; border-radius:8px; overflow:hidden;
   background:radial-gradient(ellipse at 50% 30%, rgba(140,106,63,0.22), transparent 60%),
     linear-gradient(160deg,#1d1811,#100d09);
@@ -334,3 +336,28 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   font-family:'Trebuchet MS',sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--parchment); background:rgba(0,0,0,0.45); padding:3px 9px; border-radius:10px; z-index:2;
   white-space:nowrap;}
+
+/* ================= АДАПТИВНОСТЬ: ТЕЛЕФОН / ТЕСНАЯ ВЫСОТА =================
+   Основной экран (интерактивный стол/проектор) — просторный, эти
+   раскладки не нужны. Но на маленьких экранах (при тестировании с
+   телефона, в любой ориентации) фиксированные пропорции сжимали модели
+   почти до нуля. Здесь — резервный режим: раскладки становятся простым
+   вертикальным списком С ГАРАНТИРОВАННОЙ минимальной высотой под
+   каждый блок, а вся страница получает обычную прокрутку. */
+@media (max-width:900px), (max-height:560px){
+  .obj-body{overflow-y:auto; -webkit-overflow-scrolling:touch;}
+  .obj-standard{overflow-y:auto;}
+
+  .carpet-split, .human-split{flex-direction:column; height:auto; min-height:100%;}
+  .carpet-split .carpet-split-text{flex:0 0 auto; padding-right:0;}
+  .carpet-split .carpet-split-stage{flex:0 0 auto; height:340px; min-height:280px;}
+  .human-split .human-split-left{flex:0 0 auto;}
+  .human-split .human-split-stage{flex:0 0 auto; height:280px; min-height:240px;}
+  .human-carousel{flex:0 0 auto; height:200px; min-height:200px;}
+  .human-item-text, .human-about-text{flex:0 0 auto; min-height:120px;}
+
+  .beast-grid{display:flex; flex-direction:column; height:auto; min-height:100%;}
+  .beast-cell{min-height:0;}
+  .beast-model{height:240px; min-height:240px; flex:0 0 auto;}
+  .beast-text{height:auto; min-height:110px; flex:0 0 auto;}
+}
