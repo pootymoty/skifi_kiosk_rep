@@ -293,7 +293,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    текст текущего элемента одежды / текст о находке --- */
 .human-split{display:flex; height:100%; gap:14px;}
 .human-split .human-split-left{flex:0 0 38%; display:flex; flex-direction:column;
-  min-height:0; gap:8px;}
+  min-height:0; gap:16px;}
 .human-split .human-split-stage{flex:1 1 62%; position:relative; min-width:0;
   max-height:none; min-height:0; height:100%;}
 .human-carousel{flex:1 1 50%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
@@ -308,7 +308,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .carousel-caption{position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
   font-family:'Trebuchet MS',sans-serif; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--parchment); opacity:.7;}
-.carousel-dots{position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:2;}
+.carousel-dots{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:2;}
 .carousel-dots .dot{width:6px; height:6px; border-radius:50%; transform:none;
   background:rgba(255,255,255,0.15); border:none; cursor:pointer;}
 .carousel-dots .dot.active{background:var(--gold);}
