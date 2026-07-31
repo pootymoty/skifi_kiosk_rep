@@ -23,7 +23,7 @@ export function preloadAll() {
 
   const imagePaths = [
     CONTENT.map.background,
-    CONTENT.authors.qr,
+    ...((CONTENT.authors.team || []).map(p => p.qr)),
     ...Object.values(CONTENT.objects).map(o => o.image),
     ...Object.values(CONTENT.objects).map(o => o.hole && o.hole.patchImage),
     ...Object.values(CONTENT.objects).flatMap(o =>
