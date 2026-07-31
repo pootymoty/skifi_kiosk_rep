@@ -176,23 +176,58 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   let idleTimer = null;
   let dragging = false, lastX = 0, lastY = 0;
   let pinchStartDist = 0, zoomFactor = 1;
+  let resetAnimId = null;
   const pointers = new Map();
 
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
+  // Плавный (но быстрый) возврат в исходное положение перед тем, как
+  // снова включится автовращение — раньше положение сбрасывалось
+  // мгновенно, скачком, теперь модель докручивается туда сама.
+  function animateToRest() {
+    cancelAnimationFrame(resetAnimId);
+
+    // Приводим накопленный угол поворота к диапазону -π..π — иначе,
+    // если модель успела повернуть пользователем через несколько полных
+    // оборотов, возврат к 0 «домотал» бы их все вместо короткого пути.
+    // Само присвоение ничего не меняет визуально (угол эквивалентен).
+    const twoPi = Math.PI * 2;
+    let normY = pivot.rotation.y % twoPi;
+    if (normY > Math.PI) normY -= twoPi;
+    if (normY < -Math.PI) normY += twoPi;
+    pivot.rotation.y = normY;
+
+    const startX = pivot.rotation.x, startY = pivot.rotation.y, startZ = camera.position.z;
+    const duration = 500;
+    const t0 = performance.now();
+
+    function step(now) {
+      const t = Math.min(1, (now - t0) / duration);
+      const e = 1 - Math.pow(1 - t, 3); // easeOutCubic — быстрый старт, мягкое приземление
+      pivot.rotation.x = startX * (1 - e);
+      pivot.rotation.y = startY * (1 - e);
+      camera.position.z = startZ + (baseDistance - startZ) * e;
+      if (t < 1) {
+        resetAnimId = requestAnimationFrame(step);
+      } else {
+        pivot.rotation.set(0, 0, 0);
+        camera.position.z = baseDistance;
+        zoomFactor = 1;
+        autoRotate = true;
+      }
+    }
+    resetAnimId = requestAnimationFrame(step);
+  }
+
   function scheduleIdleReset() {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-      pivot.rotation.set(0, 0, 0);
-      zoomFactor = 1;
-      camera.position.set(0, 0, baseDistance);
-      autoRotate = true;
-    }, IDLE_RESET_MS);
+    idleTimer = setTimeout(animateToRest, IDLE_RESET_MS);
   }
 
   const el = renderer.domElement;
   el.addEventListener("pointerdown", (e) => {
     autoRotate = false;
+    cancelAnimationFrame(resetAnimId); // если модель ещё доезжала «домой» — прерываем, слушаемся пользователя
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
     else if (pointers.size === 2) {
@@ -241,6 +276,7 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   return {
     destroy() {
       cancelAnimationFrame(rafId);
+      cancelAnimationFrame(resetAnimId);
       clearTimeout(idleTimer);
       ro.disconnect();
       renderer.dispose();
@@ -274,26 +310,48 @@ function mountPlaceholderViewer(mountEl, { icon, label, modelPath }, revealTarge
   let pinchStartDist = 0, pinchStartScale = 1;
   const pointers = new Map();
 
+  // Плавный (но быстрый) возврат в исходное положение вместо мгновенного
+  // скачка — та же идея, что и в реальном 3D-режиме (см. mountRealViewer).
+  let resetting = false, resetStart = 0, resetFromX = -8, resetFromY = 0, resetFromScale = 1;
+
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
   function apply() {
     card.style.transform = `rotateX(${rot.x}deg) rotateY(${rot.y}deg) scale(${scale})`;
   }
+  function startReset() {
+    // короткий путь возврата, а не докручивание через все накопленные обороты
+    let normY = rot.y % 360;
+    if (normY > 180) normY -= 360;
+    if (normY < -180) normY += 360;
+    rot.y = normY;
+
+    resetting = true;
+    resetStart = performance.now();
+    resetFromX = rot.x; resetFromY = rot.y; resetFromScale = scale;
+  }
   function scheduleIdleReset() {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-      rot = { x: -8, y: rot.y };
-      scale = 1;
-      apply();
-      autoRotate = true;
-    }, IDLE_RESET_MS);
+    idleTimer = setTimeout(startReset, IDLE_RESET_MS);
   }
-  function loop() {
-    if (autoRotate) { rot.y = (rot.y + 0.35) % 360; apply(); }
+  function loop(now) {
+    if (resetting) {
+      const t = Math.min(1, (now - resetStart) / 500);
+      const e = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      rot.x = resetFromX + (-8 - resetFromX) * e;
+      rot.y = resetFromY * (1 - e);
+      scale = resetFromScale + (1 - resetFromScale) * e;
+      apply();
+      if (t >= 1) { resetting = false; autoRotate = true; }
+    } else if (autoRotate) {
+      rot.y = (rot.y + 0.35) % 360;
+      apply();
+    }
     rafId = requestAnimationFrame(loop);
   }
 
   mountEl.addEventListener("pointerdown", (e) => {
     autoRotate = false;
+    resetting = false; // если модель ещё доезжала «домой» — прерываем, слушаемся пользователя
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
     else if (pointers.size === 2) {
@@ -333,7 +391,7 @@ function mountPlaceholderViewer(mountEl, { icon, label, modelPath }, revealTarge
   mountEl.addEventListener("pointercancel", release);
 
   apply();
-  loop();
+  rafId = requestAnimationFrame(loop);
   scheduleIdleReset();
   requestAnimationFrame(() => revealTarget.classList.add("revealed"));
 
