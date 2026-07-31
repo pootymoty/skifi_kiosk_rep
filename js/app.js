@@ -38,6 +38,13 @@ const authorsMount = screens.authors.querySelector(".authors-body");
 
 let activeController = null; // destroy()-хук текущего динамического экрана
 
+// Подсказка на карте (ТЗ п.14) должна появляться ТОЛЬКО сразу после
+// показа видео (и при обычном окончании, и при нажатии «пропустить») —
+// а не при каждом возврате на карту (например, кнопкой «Назад» со
+// страницы объекта). Этот флаг взводится в startIntro() и гасится
+// сразу после того, как карта его один раз использует.
+let hintPendingAfterVideo = false;
+
 function showScreen(name) {
   Object.values(screens).forEach(s => s.classList.remove("active"));
   screens[name].classList.add("active");
@@ -83,6 +90,7 @@ function startIntro() {
   activeController = initVideoScreen(screens.video, CONTENT.intro.video, () => {
     teardownActive();
     idleWatcher.resume();
+    hintPendingAfterVideo = true; // подсказка на карте покажется один раз именно сейчас
     goMap();
   });
   showScreen("video");
@@ -90,13 +98,16 @@ function startIntro() {
 
 // ---------------- MAP ----------------
 function goMap() {
+  const showHint = hintPendingAfterVideo;
+  hintPendingAfterVideo = false; // взводится заново только в startIntro()
   activeController = initMapScreen(
     mapMount,
     CONTENT.map,
     CONTENT.objects,
     (id) => openObject(id),
     () => goAuthors(),
-    () => restartVideo()
+    () => restartVideo(),
+    showHint
   );
   showScreen("map");
 }
