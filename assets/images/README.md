@@ -9,7 +9,10 @@
                                   ковёр целиком) — появляется по центру
                                   экрана при касании метки повреждения,
                                   см. content.js → carpet.hole.patchImage
-    authors-qr.png             — QR-код (предположительно на Telegram-канал, ТЗ п.15)
+    authors/person-1-qr.png    — QR-коды авторов (ТЗ п.15), по одному на человека,
+    authors/person-2-qr.png      см. content.js → authors.team. Все 4 должны
+    authors/person-3-qr.png      быть в едином визуальном стиле (одинаковый
+    authors/person-4-qr.png      размер рамки/оформления вокруг самого QR).
 
     clothing/skirt.png         — карусель элементов одежды на экране «Человек»
     clothing/cape.png            (PNG с прозрачным фоном), см. content.js →
