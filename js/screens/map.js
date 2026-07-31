@@ -19,7 +19,7 @@ import { createOnceHint } from "../utils/hints.js";
 
 const SELECT_DELAY_MS = 380;
 
-export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo) {
+export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo, showHint) {
   container.innerHTML = `
     <div class="map-stage">
       <img class="map-bg" alt="" draggable="false">
@@ -28,7 +28,6 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       <div class="map-caption-group">
         <span class="eyebrow map-eyebrow">Интерактивная экспозиция</span>
         <h1 class="map-title">Скифы Алтая · Древности Сибири</h1>
-        <div class="map-caption">${mapData.caption || ""}</div>
       </div>
       <button class="btn authors-fab">Авторы</button>
       <button class="btn restart-video-fab" title="Переиграть видео-заставку">Заставка</button>
@@ -118,7 +117,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   });
 
   const hint = createOnceHint(hintEl, layer);
-  hint.show();
+  if (showHint) hint.show();
 
   return {
     destroy() {
