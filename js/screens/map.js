@@ -31,7 +31,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
         <div class="map-caption">${mapData.caption || ""}</div>
       </div>
       <button class="btn authors-fab">Авторы</button>
-      <button class="btn restart-video-fab" title="Переиграть видео-заставку">▶ Видео</button>
+      <button class="btn restart-video-fab" title="Переиграть видео-заставку">Заставка</button>
       <div class="hint-toast map-hint">Нажмите на объект, чтобы узнать больше</div>
     </div>
   `;
@@ -56,6 +56,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   }
 
   let transitioning = false; // блокируем повторный тап, пока идёт «разгонка»
+  const sizedHotspots = []; // {el, data} — картинки-вырезки, чей размер надо пересчитывать при ресайзе
 
   function selectHotspot(id, el) {
     if (transitioning) return;
@@ -70,7 +71,6 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     hs.className = "hotspot";
     hs.style.left = data.hotspot.x + "%";
     hs.style.top = data.hotspot.y + "%";
-    if (data.hotspotWidth) hs.style.setProperty("--hs-w", data.hotspotWidth + "px");
 
     if (data.hotspotImage) {
       hs.classList.add("hotspot-image-mode");
@@ -83,6 +83,11 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
         hs.classList.remove("hotspot-image-mode");
         hs.innerHTML = roundMarkup(data);
       });
+      // Ширина вырезки — в процентах от карты (по умолчанию 9%), а не в
+      // фиксированных пикселях, чтобы она увеличивалась/уменьшалась
+      // ВМЕСТЕ с самим фоном карты на разных экранах, а не оставалась
+      // одного размера всегда.
+      sizedHotspots.push({ el: hs, percent: data.hotspotWidthPercent || 9 });
     } else {
       hs.innerHTML = roundMarkup(data);
     }
@@ -90,6 +95,17 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     hs.addEventListener("pointerdown", () => selectHotspot(id, hs));
     layer.appendChild(hs);
   });
+
+  function layoutHotspotSizes() {
+    const stageW = stage.clientWidth;
+    if (!stageW) return;
+    sizedHotspots.forEach(({ el, percent }) => {
+      el.style.setProperty("--hs-w", (stageW * percent / 100) + "px");
+    });
+  }
+  layoutHotspotSizes();
+  const sizeObserver = new ResizeObserver(layoutHotspotSizes);
+  sizeObserver.observe(stage);
 
   authorsBtn.addEventListener("pointerdown", () => {
     if (transitioning) return;
@@ -107,6 +123,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   return {
     destroy() {
       hint.dispose();
+      sizeObserver.disconnect();
     }
   };
 }
