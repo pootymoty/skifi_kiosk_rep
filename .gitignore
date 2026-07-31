@@ -1,17 +1,35 @@
 # ОС и редакторы
-.DS_Store
-Thumbs.db
-desktop.ini
-*.swp
-*~
-.vscode/
+.DS_Store 
+Thumbs.db 
+desktop.ini 
+*.swp 
+*~ 
+.vscode/ 
 .idea/
-
-# node, если когда-нибудь подключите инструменты сборки/линтер
-node_modules/
+# node, если когда-нибудь 
+# подключите инструменты 
+# сборки/линтер
+node_modules/ 
 npm-debug.log*
-
-# локальные архивы/бэкапы, которые иногда тянутся при выгрузке с сервера
-*.zip
-*.tar.gz
+# локальные архивы/бэкапы, 
+# которые иногда тянутся 
+# при выгрузке с сервера
+*.zip 
+*.tar.gz 
 *.bak
+# крупные ассеты — 
+# модели/картинки/видео 
+# синхронизируются отдельно 
+# (не через git, слишком 
+# тяжёлые). README.md 
+# внутри этих папок в игнор 
+# не попадают — они не 
+# подходят ни под один из 
+# паттернов ниже.
+assets/models/*.glb 
+assets/images/*.jpg 
+assets/images/*.jpeg 
+assets/images/*.png 
+assets/images/**/*.png 
+assets/images/**/*.jpg
+assets/video/*.mp4
