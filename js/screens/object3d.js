@@ -208,7 +208,7 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
     if (pointers.size === 2) {
       const pts = [...pointers.values()];
       const d = dist(pts[0], pts[1]);
-      zoomFactor = Math.min(1.8, Math.max(0.55, d / pinchStartDist));
+      zoomFactor = Math.min(1.8, Math.max(1, d / pinchStartDist));
       camera.position.z = baseDistance / zoomFactor;
       scheduleIdleReset();
       return;
@@ -310,7 +310,7 @@ function mountPlaceholderViewer(mountEl, { icon, label, modelPath }, revealTarge
     if (pointers.size === 2) {
       const pts = [...pointers.values()];
       const d = dist(pts[0], pts[1]);
-      scale = Math.min(1.8, Math.max(0.6, pinchStartScale * (d / pinchStartDist)));
+      scale = Math.min(1.8, Math.max(1, pinchStartScale * (d / pinchStartDist)));
       apply();
       scheduleIdleReset();
       return;
