@@ -6,13 +6,19 @@
 //   - центральное — основной пейджер (data.sections), именно он
 //     переключается на текст фрагмента при касании «дырки» и обратно
 //     при возврате (через onSectionsChange).
-// Оба поля — обычные пейджеры (см. js/utils/textBlock.js): стрелки
-// ‹ › и свайп работают одинаково в обоих.
+//
+// При открытии «дырки»:
+//   - верхнее поле полностью исчезает (не остаётся висеть на экране);
+//   - центральное поле показывает новый текст (он и так вертикально
+//     отцентрирован — «появляется из центра страницы»);
+//   - глобальная кнопка «Назад» временно превращается в «Ковёр целиком»
+//     (см. helpers.setBackOverride, приходит из app.js) — так она не
+//     дублируется отдельной кнопкой поверх картинки.
 // ============================================================
 import { createTextBlock } from "../utils/textBlock.js";
 import { initObjectStage2D } from "./object2d.js";
 
-export function initCarpetSplit(container, data) {
+export function initCarpetSplit(container, data, helpers = {}) {
   container.innerHTML = `
     <div class="carpet-split">
       <div class="carpet-split-text">
@@ -34,7 +40,13 @@ export function initCarpetSplit(container, data) {
     imagePath: data.image,
     hole: data.hole,
     baseSections: data.sections,
-    onSectionsChange: (sections) => centerPager.setSections(sections)
+    onSectionsChange: (sections) => centerPager.setSections(sections),
+    onHoleToggle: (isOpen, exitFn) => {
+      topEl.classList.toggle("hidden-fade", isOpen);
+      if (helpers.setBackOverride) {
+        helpers.setBackOverride(isOpen ? exitFn : null, "‹ Ковёр целиком");
+      }
+    }
   });
 
   return {
@@ -42,6 +54,7 @@ export function initCarpetSplit(container, data) {
       topPager.destroy();
       centerPager.destroy();
       if (stage2d && stage2d.destroy) stage2d.destroy();
+      if (helpers.setBackOverride) helpers.setBackOverride(null); // подстраховка
     }
   };
 }

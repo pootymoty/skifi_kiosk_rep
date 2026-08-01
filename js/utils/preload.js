@@ -1,50 +1,61 @@
 // ============================================================
-// Предзагрузка всех ассетов при старте приложения.
+// Предзагрузка всех ассетов при старте приложения — теперь ДО того,
+// как запускается видео-заставка (а не параллельно с ним, как было
+// раньше): preloadAll() возвращает Promise, и app.js ждёт его
+// завершения перед вызовом startIntro(). К моменту, когда видео
+// начинает играть, все объекты уже полностью готовы и ждут.
 //
-// Раньше каждая модель грузилась и парсилась ровно в момент нажатия
-// на объект — отсюда и заметная задержка перед появлением, из-за
-// которой казалось, что анимации появления нет вообще (она либо не
-// успевала сыграть, либо играла «в пустоту» до того, как модель была
-// готова). Теперь всё качается и парсится один раз, заранее, пока
-// пользователь смотрит видео/только зашёл на карту — дальше объекты
-// открываются мгновенно из кэша.
-//
-// Картинки (карта, ковёр, восстановленный участок, QR) точно так же
-// прогреваются через new Image(), чтобы браузер их закэшировал.
+// Картинки (вырезки на карте, ковёр, восстановленный фрагмент, QR,
+// карусель одежды) точно так же прогреваются через new Image(),
+// чтобы браузер их закэшировал.
 // ============================================================
 import { CONTENT } from "../data/content.js";
 
 const modelCache = new Map(); // путь к .glb → уже распарсенный THREE.Object3D (сцена)
-let preloadStarted = false;
+let preloadPromise = null;
+
+const IMAGE_TIMEOUT_MS = 6000; // не ждать бесконечно один медленный/битый файл
 
 export function preloadAll() {
-  if (preloadStarted) return; // не запускать повторно (например, при возврате к видео)
-  preloadStarted = true;
+  if (preloadPromise) return preloadPromise; // не запускать повторно
 
   const imagePaths = [
-    CONTENT.map.background,
     ...((CONTENT.authors.team || []).map(p => p.qr)),
     ...Object.values(CONTENT.objects).map(o => o.image),
     ...Object.values(CONTENT.objects).map(o => o.hole && o.hole.patchImage),
     ...Object.values(CONTENT.objects).flatMap(o =>
       o.clothingCarousel ? o.clothingCarousel.map(c => c.image) : []
+    ),
+    ...Object.values(CONTENT.objects).flatMap(o =>
+      o.hotspotImage ? [o.hotspotImage] : []
     )
   ].filter(Boolean);
-  imagePaths.forEach(preloadImage);
 
   const modelPaths = Object.values(CONTENT.objects).flatMap(o => {
     if (o.models) return o.models.map(m => m.modelPath).filter(Boolean); // сетка из нескольких моделей
     return o.model ? [o.model] : [];                                     // одиночная модель
   });
-  if (modelPaths.length) preloadModels(modelPaths);
+
+  preloadPromise = Promise.all([
+    Promise.all(imagePaths.map(preloadImage)),
+    preloadModels(modelPaths)
+  ]);
+  return preloadPromise;
 }
 
 function preloadImage(src) {
-  const img = new Image();
-  img.src = src; // сам факт установки src запускает загрузку в кэш браузера
+  return new Promise((resolve) => {
+    const img = new Image();
+    const done = () => resolve();
+    const timer = setTimeout(done, IMAGE_TIMEOUT_MS); // подстраховка от зависшей загрузки
+    img.onload = () => { clearTimeout(timer); done(); };
+    img.onerror = () => { clearTimeout(timer); done(); }; // ошибка одного файла не блокирует весь запуск
+    img.src = src;
+  });
 }
 
 async function preloadModels(paths) {
+  if (!paths.length) return;
   let THREE, GLTFLoader;
   try {
     THREE = await import("../vendor/three.module.js");
@@ -55,15 +66,15 @@ async function preloadModels(paths) {
     return;
   }
   const loader = new GLTFLoader();
-  paths.forEach((path) => {
-    if (modelCache.has(path)) return;
+  await Promise.all(paths.map((path) => new Promise((resolve) => {
+    if (modelCache.has(path)) { resolve(); return; }
     loader.load(
       path,
-      (gltf) => { modelCache.set(path, gltf.scene); },
+      (gltf) => { modelCache.set(path, gltf.scene); resolve(); },
       undefined,
-      (err) => { console.warn("[preload] Не удалось предзагрузить " + path, err); }
+      (err) => { console.warn("[preload] Не удалось предзагрузить " + path, err); resolve(); }
     );
-  });
+  })));
 }
 
 /**

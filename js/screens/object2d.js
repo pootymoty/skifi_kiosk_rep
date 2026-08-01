@@ -14,7 +14,7 @@
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 
-export function initObjectStage2D(container, { imagePath, hole, baseSections, onSectionsChange }) {
+export function initObjectStage2D(container, { imagePath, hole, baseSections, onSectionsChange, onHoleToggle }) {
   // Сбрасываем анимацию появления с прошлого показа — контейнер
   // (#stage2d) переиспользуется при каждом открытии объекта.
   container.classList.remove("revealed");
@@ -32,7 +32,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
         <div class="hole-detail-caption"></div>
         <div class="asset-missing-note hidden"></div>
       </div>
-      <button class="btn ghost stage-back-btn hidden">‹ Ковёр целиком</button>
       <div class="asset-missing-note base-missing hidden"></div>
     </div>
   `;
@@ -41,7 +40,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const pan = container.querySelector(".canvas2d-pan");
   const baseImg = container.querySelector(".base-img");
   const marker = container.querySelector(".hole-marker");
-  const backBtn = container.querySelector(".stage-back-btn");
   const badge = container.querySelector(".base-missing");
   const detailOverlay = container.querySelector(".hole-detail-overlay");
   const detailImg = container.querySelector(".hole-detail-img");
@@ -118,23 +116,22 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   function enterDetail() {
     if (!hole || inDetail) return;
     inDetail = true;
-    backBtn.classList.remove("hidden");
     detailOverlay.classList.remove("hidden");
     requestAnimationFrame(() => detailOverlay.classList.add("show"));
     if (onSectionsChange && hole.sections) onSectionsChange(hole.sections);
+    if (onHoleToggle) onHoleToggle(true, exitDetail);
   }
 
   function exitDetail() {
     if (!inDetail) return;
     inDetail = false;
-    backBtn.classList.add("hidden");
     detailOverlay.classList.remove("show");
     setTimeout(() => detailOverlay.classList.add("hidden"), 350);
     if (onSectionsChange && baseSections) onSectionsChange(baseSections);
+    if (onHoleToggle) onHoleToggle(false);
   }
 
   marker.addEventListener("pointerdown", (e) => { e.stopPropagation(); enterDetail(); });
-  backBtn.addEventListener("pointerdown", (e) => { e.stopPropagation(); exitDetail(); });
 
   // ---------------- обычные жесты: перетаскивание / pinch / колесо ----------------
   let dragging = false, lastX = 0, lastY = 0;
@@ -192,6 +189,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     destroy() {
       ro.disconnect();
       wrap.removeEventListener("wheel", onWheel);
+      if (inDetail && onHoleToggle) onHoleToggle(false); // подстраховка: не оставить кнопку «застрявшей»
     }
   };
 }

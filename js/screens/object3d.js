@@ -40,7 +40,7 @@ export async function initObjectStage3D(container, opts) {
       const cell = document.createElement("div");
       cell.className = "stage-3d-cell";
       container.appendChild(cell);
-      return mountModelViewer(cell, m);
+      return mountModelViewer(cell, m, { lite: true }); // несколько моделей разом — облегчённый рендер, см. mountRealViewer
     }));
     return {
       destroy() { controllers.forEach((c) => c.destroy()); }
@@ -55,8 +55,11 @@ export async function initObjectStage3D(container, opts) {
  * Монтирует ОДНУ модель в произвольный элемент — используется и для
  * одиночной модели на весь экран, и для отдельной ячейки в сетке/шахматке
  * (см. js/screens/beastGrid.js). Сам решает, THREE.js доступен или нет.
+ * @param {boolean} [renderOpts.lite] — облегчённый рендер (см. mountRealViewer):
+ *   используется, когда на экране одновременно несколько 3D-сцен —
+ *   это ощутимо снижает нагрузку на GPU и решает лаги шахматки моделей.
  */
-export async function mountModelViewer(mountEl, opts) {
+export async function mountModelViewer(mountEl, opts, renderOpts = {}) {
   mountEl.classList.remove("revealed");
 
   let THREE, GLTFLoader;
@@ -72,7 +75,7 @@ export async function mountModelViewer(mountEl, opts) {
     return mountPlaceholderViewer(mountEl, opts, mountEl);
   }
 
-  return mountRealViewer(mountEl, opts, THREE, GLTFLoader, mountEl);
+  return mountRealViewer(mountEl, opts, THREE, GLTFLoader, mountEl, renderOpts.lite);
 }
 
 // ----------------------------------------------------------------
@@ -80,7 +83,7 @@ export async function mountModelViewer(mountEl, opts) {
 // переданный элемент (это либо весь #stage3d для одной модели,
 // либо одна ячейка сетки для нескольких моделей).
 // ----------------------------------------------------------------
-function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader, revealTarget) {
+function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader, revealTarget, lite) {
   const badge = document.createElement("div");
   badge.className = "asset-missing-note hidden";
   mountEl.appendChild(badge);
@@ -92,8 +95,11 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
     mountEl.appendChild(labelEl);
   }
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // lite-режим (несколько 3D-сцен на одном экране, напр. шахматка
+  // зверей) — заметно снижает нагрузку на GPU: без сглаживания,
+  // ниже предел pixel ratio, меньше источников света, кадры реже.
+  const renderer = new THREE.WebGLRenderer({ antialias: !lite, alpha: true, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lite ? 1.25 : 2));
   renderer.domElement.style.touchAction = "none";
   mountEl.appendChild(renderer.domElement);
 
@@ -102,13 +108,17 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   const baseDistance = 4.4;
   camera.position.set(0, 0, baseDistance);
 
-  scene.add(new THREE.AmbientLight(0xfff2d8, 0.75));
+  scene.add(new THREE.AmbientLight(0xfff2d8, 0.8));
   const key = new THREE.DirectionalLight(0xffe3b0, 1.15);
   key.position.set(3, 4, 5);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x8fa0ff, 0.35);
-  rim.position.set(-4, -2, -3);
-  scene.add(rim);
+  if (!lite) {
+    // Заполняющий/контровой свет — приятный штрих, но третий источник
+    // света на сцену ощутимо дороже, когда таких сцен несколько разом.
+    const rim = new THREE.DirectionalLight(0x8fa0ff, 0.35);
+    rim.position.set(-4, -2, -3);
+    scene.add(rim);
+  }
 
   const pivot = new THREE.Group();
   scene.add(pivot);
@@ -266,12 +276,16 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   scheduleIdleReset();
 
   let rafId;
-  function animate() {
+  const frameInterval = lite ? 1000 / 30 : 0; // lite-режим: ~30fps вместо полных 60 — вместе с несколькими сценами разом это заметно бережёт GPU
+  let lastFrameTime = 0;
+  function animate(now) {
+    rafId = requestAnimationFrame(animate);
+    if (frameInterval && now - lastFrameTime < frameInterval) return;
+    lastFrameTime = now;
     if (autoRotate) pivot.rotation.y += 0.006;
     renderer.render(scene, camera);
-    rafId = requestAnimationFrame(animate);
   }
-  animate();
+  rafId = requestAnimationFrame(animate);
 
   return {
     destroy() {

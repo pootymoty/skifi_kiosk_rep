@@ -44,9 +44,9 @@ export async function initBeastGrid(container, { models, texts }) {
   const m3 = container.querySelector(".area-m3");
 
   const viewers = await Promise.all([
-    mountModelViewer(m1, combined),
-    mountModelViewer(m2, deer),
-    mountModelViewer(m3, panther)
+    mountModelViewer(m1, combined, { lite: true }),
+    mountModelViewer(m2, deer, { lite: true }),
+    mountModelViewer(m3, panther, { lite: true })
   ]);
 
   return {

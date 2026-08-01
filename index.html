@@ -9,8 +9,16 @@
 <body>
 <div id="app">
 
+  <!-- ===================== ЗАГРУЗКА (до старта видео, пока прогружаются все ассеты) ===================== -->
+  <section class="screen active" id="screen-boot">
+    <div class="boot-loading">
+      <div class="boot-eyebrow">Скифы Алтая · Древности Сибири</div>
+      <div class="boot-dots"><span></span><span></span><span></span></div>
+    </div>
+  </section>
+
   <!-- ===================== ВИДЕО-ЗАСТАВКА ===================== -->
-  <section class="screen active" id="screen-video"></section>
+  <section class="screen" id="screen-video"></section>
 
   <!-- ===================== КАРТА (ТЗ п.9) ===================== -->
   <section class="screen" id="screen-map">
