@@ -5,10 +5,11 @@
 //    в область по своим фактическим краям, панорамирование при
 //    увеличении жёстко ограничено этими же краями.
 // 2. Интерактивная зона (см. content.js → carpet.hole): подсвеченная
-//    метка на месте повреждения ковра. При касании открывается ОТДЕЛЬНАЯ
-//    картинка — именно вырезанный восстановленный фрагмент (не весь
-//    ковёр), по центру области. Кнопка «Ковёр целиком» возвращает к
-//    обычному виду.
+//    метка на месте повреждения ковра. При касании открывается
+//    ВСПЛЫВАЮЩЕЕ ОКНО (не замена страницы) — заголовок сюжета сверху,
+//    текст слева, восстановленный фрагмент справа, и своя кнопка
+//    «Назад к ковру» рядом с «Меню» (обе видны одновременно). Кнопка
+//    закрывает окно и возвращает обычный вид ковра.
 // 3. Подсказка «Приближай» — показывается один раз при открытии
 //    страницы, исчезает при первом касании изображения.
 // ============================================================
@@ -22,6 +23,8 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   // (#stage2d) переиспользуется при каждом открытии объекта.
   container.classList.remove("revealed");
 
+  const holeText = hole && hole.sections && hole.sections[0] ? hole.sections[0] : null;
+
   container.innerHTML = `
     <div class="canvas2d-wrap">
       <div class="canvas2d-pan">
@@ -31,8 +34,17 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
         </div>
       </div>
       <div class="hole-detail-overlay hidden">
-        <img class="hole-detail-img" alt="" draggable="false">
-        <div class="asset-missing-note hidden"></div>
+        <div class="hole-detail-inner">
+          <h3 class="hole-detail-title">${hole && hole.title ? hole.title : ""}</h3>
+          <div class="hole-detail-body">
+            <div class="hole-detail-text">${holeText ? `<p>${holeText.t}</p>` : ""}</div>
+            <div class="hole-detail-img-wrap">
+              <img class="hole-detail-img" alt="" draggable="false">
+              <div class="asset-missing-note hidden"></div>
+            </div>
+          </div>
+          <button class="btn ghost hole-detail-back">Назад к ковру</button>
+        </div>
       </div>
       <div class="asset-missing-note base-missing hidden"></div>
       <div class="hint-toast stage-hint">Приближай</div>
@@ -47,6 +59,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const detailOverlay = container.querySelector(".hole-detail-overlay");
   const detailImg = container.querySelector(".hole-detail-img");
   const detailBadge = detailOverlay.querySelector(".asset-missing-note");
+  const detailBackBtn = detailOverlay.querySelector(".hole-detail-back");
   const hintEl = container.querySelector(".stage-hint");
   const hint = createOnceHint(hintEl, wrap);
 
@@ -117,15 +130,14 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     pan.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
   }
 
-  // ---------------- вход/выход из «детали» (дырка → отдельная картинка фрагмента) ----------------
+  // ---------------- вход/выход из «детали» (дырка → всплывающее окно) ----------------
   function enterDetail() {
     if (!hole || inDetail) return;
     inDetail = true;
     hintEl.classList.remove("show");
     detailOverlay.classList.remove("hidden");
     requestAnimationFrame(() => detailOverlay.classList.add("show"));
-    if (onSectionsChange && hole.sections) onSectionsChange(hole.sections);
-    if (onHoleToggle) onHoleToggle(true, exitDetail);
+    if (onHoleToggle) onHoleToggle(true);
   }
 
   function exitDetail() {
@@ -133,11 +145,11 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     inDetail = false;
     detailOverlay.classList.remove("show");
     setTimeout(() => detailOverlay.classList.add("hidden"), 350);
-    if (onSectionsChange && baseSections) onSectionsChange(baseSections);
     if (onHoleToggle) onHoleToggle(false);
   }
 
   marker.addEventListener("pointerdown", (e) => { e.stopPropagation(); enterDetail(); });
+  detailBackBtn.addEventListener("pointerdown", exitDetail);
 
   // ---------------- обычные жесты: перетаскивание / pinch / колесо ----------------
   let dragging = false, lastX = 0, lastY = 0;
@@ -197,7 +209,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
       ro.disconnect();
       wrap.removeEventListener("wheel", onWheel);
       hint.dispose();
-      if (inDetail && onHoleToggle) onHoleToggle(false); // подстраховка: не оставить кнопку «застрявшей»
     }
   };
 }
