@@ -18,6 +18,7 @@
 // картинки, отменяя поворот, прежде чем проверять альфа-канал).
 // ============================================================
 import { createOnceHint } from "../utils/hints.js";
+import { traceContours } from "../utils/contourTrace.js";
 
 const SELECT_DELAY_MS = 380;
 const ALPHA_THRESHOLD = 15; // 0-255, ниже — пиксель считается прозрачным
@@ -123,9 +124,47 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     try {
       const data = ctx.getImageData(0, 0, w, h).data;
       alphaMap.set(hs, { natW: w, natH: h, data, left: L.left, top: L.top, width: L.width, height: L.height, rotate: L.rotate });
+      buildOutline(hs, data, w, h);
     } catch (err) {
       console.warn("[map] Не удалось прочитать пиксели " + img.src + " для точного хит-теста.", err);
     }
+  }
+
+  // «Бегущая» обводка ПО КОНТУРУ картинки (не по прямоугольной рамке
+  // вокруг неё) — строится один раз при загрузке картинки через
+  // трассировку альфа-канала (marching squares, см. utils/contourTrace.js).
+  // Сетка для трассировки — уменьшенная копия альфа-маски (иначе на
+  // полном разрешении контур был бы избыточно детальным и рваным по
+  // краям сглаживания PNG).
+  const OUTLINE_GRID = 130; // ячеек по большей стороне — компромисс детальности/гладкости
+  function buildOutline(hs, data, w, h) {
+    const cols = w >= h ? OUTLINE_GRID : Math.max(2, Math.round(OUTLINE_GRID * w / h));
+    const rows = h >= w ? OUTLINE_GRID : Math.max(2, Math.round(OUTLINE_GRID * h / w));
+    const grid = new Uint8Array(cols * rows);
+    for (let gy = 0; gy < rows; gy++) {
+      const sy = Math.min(h - 1, Math.round((gy / (rows - 1)) * (h - 1)));
+      for (let gx = 0; gx < cols; gx++) {
+        const sx = Math.min(w - 1, Math.round((gx / (cols - 1)) * (w - 1)));
+        grid[gy * cols + gx] = data[(sy * w + sx) * 4 + 3] > ALPHA_THRESHOLD ? 1 : 0;
+      }
+    }
+
+    const polylines = traceContours(grid, cols, rows);
+    if (!polylines.length) return;
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${cols - 1} ${rows - 1}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.classList.add("hero-outline");
+    polylines
+      .filter((pts) => pts.length > 3) // отбрасываем шум/точечные артефакты трассировки
+      .forEach((pts) => {
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", pts.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ") + " Z");
+        svg.appendChild(path);
+      });
+    hs.appendChild(svg);
   }
 
   // Проверка «попал ли клик в непрозрачную часть картинки» — с учётом

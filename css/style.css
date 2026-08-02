@@ -174,27 +174,19 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   filter:drop-shadow(0 0 16px var(--gold-bright)) drop-shadow(0 0 34px rgba(230,197,129,.7));}
 .hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
 
-/* --- «бегущая» пунктирная обводка вокруг картинок-объектов на карте.
-   Цвет сейчас — тот же #0E0606, что и рамка кнопки в состоянии
-   "нажатие" (как просили), НО это цвет фона карты — на чёрном фоне
-   такая обводка практически не видна. Пока оставил как есть, спросил
-   в чате, что имелось в виду — возможно, вы имели в виду светлую
-   рамку (#F0EEEE), она видна отлично. Поменять — одна строчка
-   (--marching-color ниже). */
-.hero-object::after{content:""; position:absolute; inset:0; pointer-events:none;
-  --marching-color:#0E0606;
-  background-image:
-    linear-gradient(90deg, var(--marching-color) 50%, transparent 50%),
-    linear-gradient(90deg, var(--marching-color) 50%, transparent 50%),
-    linear-gradient(0deg, var(--marching-color) 50%, transparent 50%),
-    linear-gradient(0deg, var(--marching-color) 50%, transparent 50%);
-  background-repeat:repeat-x, repeat-x, repeat-y, repeat-y;
-  background-size:12px 2px, 12px 2px, 2px 12px, 2px 12px;
-  background-position:0 0, 0 100%, 0 0, 100% 0;
-  animation:marchingAnts .5s infinite linear;}
-@keyframes marchingAnts{
-  to{background-position:12px 0, -12px 100%, 0 -12px, 100% 12px;}
-}
+/* --- «бегущая» обводка ПО КОНТУРУ картинки (не по прямоугольнику) —
+   сам путь строится в map.js (трассировка альфа-канала, marching
+   squares, см. utils/contourTrace.js), тут только анимация и цвет.
+   Цвет — тот же #0E0606, что и рамка кнопки в состоянии "нажатие" (как
+   просили) — учтите, это цвет фона карты, на чёрном фоне обводка
+   практически не видна. Поменять — одна переменная ниже. */
+.hero-outline{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
+.hero-outline path{
+  --outline-color:#0E0606;
+  fill:none; stroke:var(--outline-color); stroke-width:1.4;
+  vector-effect:non-scaling-stroke;
+  stroke-dasharray:6 5; animation:marchDash .5s linear infinite;}
+@keyframes marchDash{to{stroke-dashoffset:-11;}}
 
 /* --- метка объекта: круглая кнопка (запасной вариант, если у объекта
    нет heroLayout из Figma) --- */
