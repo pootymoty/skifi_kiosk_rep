@@ -382,7 +382,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* --- «Человек»: сцена (видео/модель) + кнопка-переключатель слева,
    карусель одежды + независимый текст справа --- */
 .human-split{display:flex; height:100%; gap:14px;}
-.human-split-stage-col{flex:0 0 40%; display:flex; flex-direction:column; gap:14px; min-height:0;
+.human-split-stage-col{flex:0 0 52%; display:flex; flex-direction:column; gap:14px; min-height:0;
   padding-bottom:64px;}
 .human-split .human-split-stage{flex:1; position:relative; min-width:0; min-height:0;}
 /* Кнопка позиционируется от .obj-body (там position:relative, а сам
@@ -394,12 +394,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .human-video-stage.revealed{opacity:1; transform:scale(1);}
 .human-video{max-width:100%; max-height:100%; width:auto; height:100%;
   aspect-ratio:9/16; object-fit:cover; display:block; border-radius:4px;}
-.human-split-right{flex:1 1 60%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
+.human-split-right{flex:1 1 48%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
 /* Стрелки текста «о находке» — выровнены по той же Y, что и «Меню» и
    остальные стрелки на других страницах (тот же анкор — .obj-body,
    растянутый на весь экран, поэтому здесь тоже намеренно нет своего
    position:relative). */
-.human-text-aligned .text-arrows-row{position:absolute; left:42%; right:18px; bottom:20px;}
+.human-text-aligned .text-arrows-row{position:absolute; left:50%; right:18px; bottom:20px;}
 .human-carousel{flex:1 1 55%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
   background:transparent;}
 .human-about-text{flex:1 1 45%; min-height:0; padding-top:6px;}
