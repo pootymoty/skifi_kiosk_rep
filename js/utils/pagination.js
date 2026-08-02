@@ -1,7 +1,8 @@
 // ============================================================
 // Пагинация текстовых блоков объекта (ТЗ п.10).
-// Индикатор страниц ▰ ▱ ▱ — не кликабелен, только отображает прогресс.
-// Листать можно и стрелками, и свайпом по самому тексту.
+// Только стрелки ‹ › — БЕЗ точек-индикатора страниц. Стрелки видны
+// только если у блока больше одной страницы. Листать можно и
+// стрелками, и свайпом по самому тексту.
 //
 // Если дольше IDLE_RESET_MS не было ни одного пролистывания — блок сам
 // плавно возвращается на первую страницу (та же идея, что и сброс
@@ -17,7 +18,6 @@ export class TextPager {
    * @param {Object} refs
    * @param {HTMLElement} refs.heading
    * @param {HTMLElement} refs.body
-   * @param {HTMLElement} refs.dots
    * @param {HTMLButtonElement} refs.prevBtn
    * @param {HTMLButtonElement} refs.nextBtn
    * @param {HTMLElement} [refs.swipeArea] — область для свайпа (по умолчанию — родитель body, т.е. .text-content)
@@ -26,7 +26,6 @@ export class TextPager {
     this.heading = refs.heading;
     this.body = refs.body;
     this.location = refs.location || null; // необязательно — маленькая подпись "место хранения"
-    this.dots = refs.dots;
     this.prevBtn = refs.prevBtn;
     this.nextBtn = refs.nextBtn;
     this.sections = [];
@@ -113,23 +112,15 @@ export class TextPager {
       }
     }
 
-    // Листать нечего — одна секция. Стрелки и точки только мешали бы
+    // Листать нечего — одна секция. Стрелки только мешали бы
     // (намекали бы на пагинацию, которой по факту нет).
     const hasMultiplePages = this.sections.length > 1;
     this.prevBtn.style.display = hasMultiplePages ? "" : "none";
     this.nextBtn.style.display = hasMultiplePages ? "" : "none";
-    this.dots.style.display = hasMultiplePages ? "" : "none";
     if (!hasMultiplePages) return;
 
     this.prevBtn.disabled = this.page === 0;
     this.nextBtn.disabled = this.page === this.sections.length - 1;
-
-    this.dots.innerHTML = "";
-    this.sections.forEach((_, i) => {
-      const d = document.createElement("div");
-      d.className = "dot" + (i === this.page ? " active" : "");
-      this.dots.appendChild(d);
-    });
   }
 
   destroy() {

@@ -133,6 +133,21 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     layer.appendChild(hs);
   });
 
+  // Раньше размер карты вычислялся через CSS aspect-ratio внутри grid —
+  // похоже, именно эта комбинация и давала сдвиг всех элементов влево.
+  // Теперь считаем размер сцены (с сохранением 16:9) сами, явно, и
+  // проставляем как обычные пиксели — без CSS-магии, без сюрпризов.
+  const mount = stage.parentElement;
+  function resizeStageBox() {
+    const availW = mount.clientWidth, availH = mount.clientHeight;
+    if (!availW || !availH) return;
+    let w = availW, h = w * 9 / 16;
+    if (h > availH) { h = availH; w = h * 16 / 9; }
+    stage.style.width = w + "px";
+    stage.style.height = h + "px";
+    relayout();
+  }
+
   // Пересчитываем позиции/размеры ВСЕХ элементов макета (картинки,
   // заголовок, эйбрау, кнопки) при любом изменении размера карты —
   // единый коэффициент scale для всего, без искажений.
@@ -152,9 +167,9 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       if (el) applyLayout(el, spec, scale);
     });
   }
-  const ro = new ResizeObserver(relayout);
-  ro.observe(stage);
-  relayout();
+  const ro = new ResizeObserver(resizeStageBox);
+  ro.observe(mount);
+  resizeStageBox();
 
   function buildAlphaMask(hs, img, L) {
     const w = img.naturalWidth, h = img.naturalHeight;

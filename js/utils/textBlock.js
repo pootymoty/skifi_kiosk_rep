@@ -1,11 +1,10 @@
 // ============================================================
-// Переиспользуемый текстовый блок с пагинацией (стрелки ‹ › +
-// квадратики-индикаторы страниц). Стрелки/точки показываются, ТОЛЬКО
-// если у блока больше одной страницы — см. js/utils/pagination.js
-// (TextPager._render() сам скрывает их, если sections.length <= 1).
-// Можно поставить где угодно (у каждой модели в шахматке, у каждого
-// текстового блока и т.д.), и у каждого экземпляра — своя независимая
-// пагинация, свайп по тексту тоже работает.
+// Переиспользуемый текстовый блок с пагинацией — только стрелки ‹ ›
+// (без точек-индикатора), показываются, ТОЛЬКО если у блока больше
+// одной страницы — см. js/utils/pagination.js (TextPager._render()
+// сам скрывает их, если sections.length <= 1). Можно поставить где
+// угодно, и у каждого экземпляра — своя независимая пагинация, свайп
+// по тексту тоже работает.
 // ============================================================
 import { TextPager } from "./pagination.js";
 
@@ -14,29 +13,42 @@ import { TextPager } from "./pagination.js";
  * @param {Array<{h:string,t:string,location?:string}>} sections
  * @param {Object} [opts]
  * @param {string} [opts.extraClass] - дополнительный класс на обёртку (для стилизации под конкретное место)
+ * @param {boolean} [opts.arrowsBelow] - стрелки под текстом (в ряд), а не по бокам от него
  * @returns {TextPager} - обычный TextPager (setSections/go/destroy)
  */
 export function createTextBlock(container, sections, opts = {}) {
-  container.innerHTML = `
-    <div class="mini-text-block ${opts.extraClass || ""}">
-      <div class="text-slider">
-        <button class="text-arrow" data-prev aria-label="Предыдущий блок">‹</button>
+  container.innerHTML = opts.arrowsBelow
+    ? `
+      <div class="mini-text-block arrows-below ${opts.extraClass || ""}">
         <div class="text-content">
           <h3 data-heading>—</h3>
           <p data-body>—</p>
           <p class="txt-location" data-location></p>
         </div>
-        <button class="text-arrow" data-next aria-label="Следующий блок">›</button>
+        <div class="text-arrows-row">
+          <button class="text-arrow" data-prev aria-label="Предыдущий блок">‹</button>
+          <button class="text-arrow" data-next aria-label="Следующий блок">›</button>
+        </div>
       </div>
-      <div class="dots" data-dots></div>
-    </div>
-  `;
+    `
+    : `
+      <div class="mini-text-block ${opts.extraClass || ""}">
+        <div class="text-slider">
+          <button class="text-arrow" data-prev aria-label="Предыдущий блок">‹</button>
+          <div class="text-content">
+            <h3 data-heading>—</h3>
+            <p data-body>—</p>
+            <p class="txt-location" data-location></p>
+          </div>
+          <button class="text-arrow" data-next aria-label="Следующий блок">›</button>
+        </div>
+      </div>
+    `;
 
   const pager = new TextPager({
     heading: container.querySelector("[data-heading]"),
     body: container.querySelector("[data-body]"),
     location: container.querySelector("[data-location]"),
-    dots: container.querySelector("[data-dots]"),
     prevBtn: container.querySelector("[data-prev]"),
     nextBtn: container.querySelector("[data-next]")
   });

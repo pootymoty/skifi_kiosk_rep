@@ -121,9 +121,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .intro-skip{position:absolute; right:22px; bottom:22px;}
 
 /* ================= КАРТА (макет из Figma, экран 1280×720) ================= */
-.map-mount{flex:1; display:grid; place-items:center; min-height:0; overflow:hidden;}
-.map-stage{position:relative; aspect-ratio:16/9; max-width:100%; max-height:100%;
-  width:100%; border-radius:6px; overflow:hidden; background:var(--hero-bg);}
+.map-mount{flex:1; display:flex; align-items:center; justify-content:center; min-height:0; overflow:hidden;}
+.map-stage{position:relative; overflow:hidden; background:var(--hero-bg); border-radius:6px;}
 .map-scrim{position:absolute; inset:0; background:rgba(8,6,4,0.72); opacity:0;
   pointer-events:none; transition:opacity .38s ease; z-index:1;}
 .map-stage.selecting .map-scrim{opacity:1;}
@@ -333,10 +332,6 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .txt-location{margin-top:6px !important; font-size:1rem !important; letter-spacing:.04em;
   color:var(--text-dim); opacity:.55; font-style:italic;}
 .txt-location.hidden{display:none;}
-.dots{display:flex; justify-content:center; gap:6px; padding-top:8px;}
-.dot{width:6px; height:6px; border-radius:1px; background:rgba(255,255,255,0.12); border:none;
-  transform:rotate(45deg);}
-.dot.active{background:var(--gold);}
 
 /* ================= АВТОРЫ ================= */
 .authors-body{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -366,13 +361,16 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* Переиспользуемый текстовый блок с пагинацией (см. js/utils/textBlock.js) —
    стрелки/точки видны только если у блока больше одной страницы. */
 .mini-text-block{display:flex; flex-direction:column; height:100%; min-height:0;}
+.mini-text-block.arrows-below{gap:10px;}
+.mini-text-block.arrows-below .text-content{flex:1; min-height:0;}
+.text-arrows-row{display:flex; justify-content:center; gap:20px; flex:0 0 auto;}
 
 /* --- «Ковёр»: картинка в правой половине (с небольшим заходом за
    середину), текст слева, по высоте отцентрирован --- */
 .carpet-split{display:flex; height:100%; gap:14px;}
 .carpet-split .carpet-split-text{flex:0 0 28%; min-height:0; padding-right:4px;
   display:flex; flex-direction:column; gap:18px; padding-bottom:64px;}
-.carpet-split-text-top{flex:0 0 auto; max-height:40%;
+.carpet-split-text-top{flex:0 0 auto; max-height:40%; overflow:hidden;
   transition:opacity .3s ease, transform .3s ease;}
 .carpet-split-text-top.hidden-fade{opacity:0; transform:translateY(-8px); pointer-events:none;}
 .carpet-split-text-center{flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center;}
@@ -405,31 +403,19 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   background:rgba(255,255,255,0.15); border:none; cursor:pointer;}
 .carousel-dots .dot.active{background:var(--gold);}
 
-/* --- «Скифский звериный стиль»: шахматная сетка 3 моделей + 4 текстов --- */
-.beast-grid{display:grid; height:100%; gap:6px;
-  grid-template-columns:1fr 1fr 1fr;
-  grid-template-rows:1fr 1fr auto;
-  grid-template-areas:
-    "t1 m1 t2"
-    "m2 t3 m3"
-    "t4 t4 t4";}
-.beast-cell.area-t1{grid-area:t1;}
-.beast-cell.area-m1{grid-area:m1;}
-.beast-cell.area-t2{grid-area:t2;}
-.beast-cell.area-m2{grid-area:m2;}
-.beast-cell.area-t3{grid-area:t3;}
-.beast-cell.area-m3{grid-area:m3;}
-.beast-cell.area-t4{grid-area:t4; min-height:100px;}
-.beast-text{min-height:0; overflow:hidden; padding:0 4px;}
-.beast-text .text-content h3{font-size:1.25rem;}
-.beast-text .text-content p{font-size:1.1rem; line-height:1.45; font-weight:300;}
-.beast-text.area-t4 .text-content{align-items:center; text-align:center;}
-.beast-text.area-t4 .text-content p{max-width:640px; margin-left:auto; margin-right:auto;}
-.beast-model{position:relative; z-index:2; border-radius:0; overflow:hidden;
-  background:transparent;
-  display:flex; align-items:center; justify-content:center;
-  opacity:0; transform:scale(.9); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.3,1);}
-.beast-model.revealed{opacity:1; transform:scale(1);}
+/* --- «Скифский звериный стиль»: 3 фигурки листаются одной парой
+   стрелок — текст слева (на всю высоту), модель справа сверху,
+   стрелки под моделью справа (как в макете) --- */
+.beast-carousel{display:grid; height:100%; gap:14px;
+  grid-template-columns:35% 1fr;
+  grid-template-rows:1fr auto;}
+.beast-carousel-text{grid-column:1; grid-row:1 / span 2; min-height:0; overflow:hidden;}
+.beast-carousel-text h3{font-size:1.4rem; color:var(--gold-bright); margin:0 0 5px;
+  letter-spacing:.08em; font-weight:400;}
+.beast-carousel-text p{font-size:1.25rem; line-height:1.5; color:var(--text); margin:0; font-weight:300;}
+.beast-carousel-stage{grid-column:2; grid-row:1; position:relative; min-width:0; min-height:0;
+  max-height:none;}
+.beast-carousel-arrows{grid-column:2; grid-row:2; display:flex; justify-content:center; gap:16px;}
 
 /* ================= АДАПТИВНОСТЬ: ТЕЛЕФОН / ТЕСНАЯ ВЫСОТА =================
    Основной экран (интерактивный стол/проектор) — просторный, эти
@@ -451,8 +437,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   .human-carousel{flex:0 0 auto; height:200px; min-height:200px;}
   .human-about-text{flex:0 0 auto; min-height:120px;}
 
-  .beast-grid{display:flex; flex-direction:column; height:auto; min-height:100%;}
-  .beast-cell{min-height:0;}
-  .beast-model{height:240px; min-height:240px; flex:0 0 auto;}
-  .beast-text{height:auto; min-height:110px; flex:0 0 auto;}
+  .beast-carousel{display:flex; flex-direction:column; height:auto; min-height:100%;}
+  .beast-carousel-text{min-height:100px;}
+  .beast-carousel-stage{height:260px; min-height:220px; flex:0 0 auto;}
+  .beast-carousel-arrows{justify-content:center;}
 }

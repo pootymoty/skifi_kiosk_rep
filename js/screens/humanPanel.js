@@ -23,7 +23,7 @@ export function initHumanPanel(container, data) {
     resumeMs: data.carouselResumeMs || 20000
   });
 
-  const aboutPager = createTextBlock(aboutTextEl, data.aboutSections);
+  const aboutPager = createTextBlock(aboutTextEl, data.aboutSections, { arrowsBelow: true });
 
   return {
     destroy() {

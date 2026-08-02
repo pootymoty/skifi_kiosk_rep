@@ -13,7 +13,7 @@ import { initObjectStage3D } from "./screens/object3d.js";
 import { initObjectStage2D } from "./screens/object2d.js";
 import { initCarpetSplit } from "./screens/carpetSplit.js";
 import { initHumanSplit } from "./screens/humanSplit.js";
-import { initBeastGrid } from "./screens/beastGrid.js";
+import { initBeastCarousel } from "./screens/beastCarousel.js";
 import { initAuthorsScreen } from "./screens/authors.js";
 
 // Таймеры простоя (attract loop). Два режима — см. js/utils/idle.js:
@@ -136,7 +136,6 @@ const pager = new TextPager({
   heading: document.getElementById("txtHeading"),
   body: document.getElementById("txtBody"),
   location: document.getElementById("txtLocation"),
-  dots: document.getElementById("txtDots"),
   prevBtn: document.getElementById("txtPrev"),
   nextBtn: document.getElementById("txtNext")
 });
@@ -155,10 +154,12 @@ async function openObject(id) {
   }
   stageController = null;
 
-  if (data.layout === "beast-grid") {
+  if (data.layout === "beast-carousel") {
     objStandardEl.style.display = "none";
     objCustomEl.classList.remove("hidden");
-    stageController = await initBeastGrid(objCustomEl, { models: data.models, texts: data.texts });
+    stageController = await initBeastCarousel(objCustomEl, { title: data.title, entries: data.entries }, {
+      setPageTitle: (t) => { pageTitleEl.textContent = t; }
+    });
 
   } else if (data.layout === "human-split") {
     objStandardEl.style.display = "none";
