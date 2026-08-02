@@ -137,10 +137,17 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   const loader = new GLTFLoader();
 
   // Анимация появления должна сыграть ровно в момент, когда модель
-  // реально готова — а не в момент открытия экрана/ячейки.
+  // реально готова — а не в момент открытия экрана/ячейки. Тот же
+  // момент отдаём наружу как promise (ready) — по нему вызывающий код
+  // (см. js/app.js, beastCarousel.js, humanSplit.js) может дождаться,
+  // когда страница ДЕЙСТВИТЕЛЬНО готова, прежде чем показывать её
+  // целиком, а не открывать «на глазах у пользователя, пока догружается».
+  let resolveReady;
+  const readyPromise = new Promise((resolve) => { resolveReady = resolve; });
   function revealNow() {
     requestAnimationFrame(() => revealTarget.classList.add("revealed"));
     spinner.remove();
+    resolveReady();
   }
 
   const spinner = document.createElement("div");
@@ -301,6 +308,7 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   rafId = requestAnimationFrame(animate);
 
   return {
+    ready: readyPromise,
     destroy() {
       cancelAnimationFrame(rafId);
       cancelAnimationFrame(resetAnimId);
@@ -702,6 +710,7 @@ function mountPlaceholderViewer(mountEl, { icon, label, modelPath }, revealTarge
   requestAnimationFrame(() => revealTarget.classList.add("revealed"));
 
   return {
+    ready: Promise.resolve(),
     destroy() {
       cancelAnimationFrame(rafId);
       clearTimeout(idleTimer);

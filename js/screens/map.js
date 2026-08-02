@@ -114,9 +114,11 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     img.addEventListener("error", () => {
       console.warn("[map] Файл не найден: " + L.image + " (объект «" + data.title + "»). Метка временно невидима, но кликабельна по всей área (запасной вариант).");
       hs.classList.add("hero-object-missing");
+      hs.classList.add("loaded");
     });
     img.addEventListener("load", () => {
       buildAlphaMask(hs, img, L);
+      requestAnimationFrame(() => hs.classList.add("loaded"));
     });
 
     layer.appendChild(hs);

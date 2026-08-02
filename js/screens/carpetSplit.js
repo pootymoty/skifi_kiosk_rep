@@ -12,7 +12,7 @@
 import { createTextBlock } from "../utils/textBlock.js";
 import { initObjectStage2D } from "./object2d.js";
 
-export function initCarpetSplit(container, data, helpers = {}) {
+export async function initCarpetSplit(container, data, helpers = {}) {
   container.innerHTML = `
     <div class="carpet-split">
       <div class="carpet-split-stage stage-2d"></div>
@@ -21,7 +21,7 @@ export function initCarpetSplit(container, data, helpers = {}) {
   `;
 
   const textEl = container.querySelector(".carpet-split-text");
-  const pager = createTextBlock(textEl, data.sections);
+  const pager = createTextBlock(textEl, data.sections, { arrowsBelow: true });
 
   const stageEl = container.querySelector(".carpet-split-stage");
   const stage2d = initObjectStage2D(stageEl, {
@@ -31,10 +31,11 @@ export function initCarpetSplit(container, data, helpers = {}) {
     onSectionsChange: (sections) => pager.setSections(sections),
     onHoleToggle: (isOpen, exitFn) => {
       if (helpers.setBackOverride) {
-        helpers.setBackOverride(isOpen ? exitFn : null, "‹ Ковёр целиком");
+        helpers.setBackOverride(isOpen ? exitFn : null, "Ковёр целиком");
       }
     }
   });
+  await stage2d.ready; // дожидаемся картинку ковра, чтобы страница открывалась уже полностью готовой
 
   return {
     destroy() {

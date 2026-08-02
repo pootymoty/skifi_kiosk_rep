@@ -46,6 +46,7 @@ export async function initHumanSplit(container, data) {
       stageEl.classList.add("stage-3d");
       stageController = await mountModelViewer(stageEl, { modelPath: data.model, icon: data.icon });
     }
+    await stageController.ready; // дожидаемся, чтобы переключение не выглядело "недогруженным"
     toggleBtn.textContent = showingVideo ? "3D модель" : "ии визуализация";
   }
 
@@ -70,6 +71,8 @@ function mountHumanVideo(mountEl, src) {
   const isGif = /\.gif($|\?)/i.test(src);
   const badge = document.createElement("div");
   badge.className = "asset-missing-note hidden";
+  let resolveReady;
+  const readyPromise = new Promise((resolve) => { resolveReady = resolve; });
 
   let mediaEl;
   if (isGif) {
@@ -97,6 +100,7 @@ function mountHumanVideo(mountEl, src) {
 
   function reveal() {
     requestAnimationFrame(() => mountEl.classList.add("revealed"));
+    resolveReady();
   }
   function showMissing() {
     console.warn("[human] Файл не найден: " + src);
@@ -106,6 +110,7 @@ function mountHumanVideo(mountEl, src) {
   }
 
   return {
+    ready: readyPromise,
     destroy() {
       if (!isGif) { mediaEl.pause(); mediaEl.src = ""; }
     }

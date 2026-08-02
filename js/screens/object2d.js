@@ -7,9 +7,12 @@
 // 2. Интерактивная зона (см. content.js → carpet.hole): подсвеченная
 //    метка на месте повреждения ковра. При касании открывается ОТДЕЛЬНАЯ
 //    картинка — именно вырезанный восстановленный фрагмент (не весь
-//    ковёр), по центру области, с подписью под ней. Кнопка «Ковёр
-//    целиком» возвращает к обычному виду.
+//    ковёр), по центру области. Кнопка «Ковёр целиком» возвращает к
+//    обычному виду.
+// 3. Подсказка «Приближай» — показывается один раз при открытии
+//    страницы, исчезает при первом касании изображения.
 // ============================================================
+import { createOnceHint } from "../utils/hints.js";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
@@ -29,10 +32,10 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
       </div>
       <div class="hole-detail-overlay hidden">
         <img class="hole-detail-img" alt="" draggable="false">
-        <div class="hole-detail-caption"></div>
         <div class="asset-missing-note hidden"></div>
       </div>
       <div class="asset-missing-note base-missing hidden"></div>
+      <div class="hint-toast stage-hint">Приближай</div>
     </div>
   `;
 
@@ -43,12 +46,17 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const badge = container.querySelector(".base-missing");
   const detailOverlay = container.querySelector(".hole-detail-overlay");
   const detailImg = container.querySelector(".hole-detail-img");
-  const detailCaption = container.querySelector(".hole-detail-caption");
   const detailBadge = detailOverlay.querySelector(".asset-missing-note");
+  const hintEl = container.querySelector(".stage-hint");
+  const hint = createOnceHint(hintEl, wrap);
 
   // ---------------- загрузка изображений ----------------
+  let resolveReady;
+  const readyPromise = new Promise((resolve) => { resolveReady = resolve; });
   function revealNow() {
     requestAnimationFrame(() => container.classList.add("revealed"));
+    hint.show();
+    resolveReady();
   }
   let natW = 0, natH = 0;
   baseImg.addEventListener("load", () => {
@@ -72,9 +80,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
       detailBadge.classList.remove("hidden");
     });
     detailImg.src = hole.patchImage;
-    if (hole.sections && hole.sections[0]) {
-      detailCaption.textContent = hole.sections[0].h;
-    }
   }
 
   // ---------------- метка «дырки» на карте (позиция в % от картинки) ----------------
@@ -116,6 +121,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   function enterDetail() {
     if (!hole || inDetail) return;
     inDetail = true;
+    hintEl.classList.remove("show");
     detailOverlay.classList.remove("hidden");
     requestAnimationFrame(() => detailOverlay.classList.add("show"));
     if (onSectionsChange && hole.sections) onSectionsChange(hole.sections);
@@ -186,9 +192,11 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   apply();
 
   return {
+    ready: readyPromise,
     destroy() {
       ro.disconnect();
       wrap.removeEventListener("wheel", onWheel);
+      hint.dispose();
       if (inDetail && onHoleToggle) onHoleToggle(false); // подстраховка: не оставить кнопку «застрявшей»
     }
   };

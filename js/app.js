@@ -121,6 +121,9 @@ const stage3dEl = document.getElementById("stage3d");
 const stage2dEl = document.getElementById("stage2d");
 const backBtn = document.getElementById("btnBackFromObject");
 const backBtnDefaultLabel = backBtn.textContent;
+const objLoadingOverlay = document.getElementById("objLoadingOverlay");
+function showLoadingOverlay() { objLoadingOverlay.classList.remove("hidden"); }
+function hideLoadingOverlay() { objLoadingOverlay.classList.add("hidden"); }
 
 // Позволяет текущему экрану временно "перехватить" глобальную кнопку
 // «Назад» — например, у ковра при открытой «дырке» она должна на
@@ -146,6 +149,8 @@ async function openObject(id) {
   const data = CONTENT.objects[id];
   if (!data) { console.error("[app] Неизвестный объект: " + id); return; }
 
+  showLoadingOverlay();
+  showScreen("object"); // переключаемся сразу — дальше пользователь видит анимацию загрузки, а не "зависшую" карту
   pageTitleEl.textContent = data.title;
   setBackOverride(null); // сбрасываем на всякий случай при каждом открытии объекта
 
@@ -169,7 +174,7 @@ async function openObject(id) {
   } else if (data.layout === "carpet-split") {
     objStandardEl.style.display = "none";
     objCustomEl.classList.remove("hidden");
-    stageController = initCarpetSplit(objCustomEl, data, { setBackOverride });
+    stageController = await initCarpetSplit(objCustomEl, data, { setBackOverride });
 
   } else {
     // Стандартный шаблон (на случай новых объектов без своей раскладки)
@@ -187,6 +192,7 @@ async function openObject(id) {
         ? { models: data.models }
         : { modelPath: data.model, icon: data.icon }
       );
+      await stageController.ready;
     } else {
       stageController = initObjectStage2D(stage2dEl, {
         imagePath: data.image,
@@ -194,10 +200,11 @@ async function openObject(id) {
         baseSections: data.sections,
         onSectionsChange: (sections) => pager.setSections(sections)
       });
+      await stageController.ready;
     }
   }
 
-  showScreen("object");
+  hideLoadingOverlay();
 }
 
 backBtn.addEventListener("pointerdown", () => {

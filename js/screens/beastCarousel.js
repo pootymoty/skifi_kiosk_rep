@@ -7,12 +7,16 @@
 // фигурке «‹» неактивна, на последней неактивна «›».
 // ============================================================
 import { mountModelViewer } from "./object3d.js";
+import { createOnceHint } from "../utils/hints.js";
 
 export async function initBeastCarousel(container, { title, entries }, helpers = {}) {
   container.innerHTML = `
     <div class="beast-carousel">
       <div class="beast-carousel-text"></div>
-      <div class="beast-carousel-stage stage-3d"></div>
+      <div class="beast-carousel-stage-wrap">
+        <div class="beast-carousel-stage stage-3d"></div>
+        <div class="hint-toast beast-hint">Вращай</div>
+      </div>
       <div class="beast-carousel-arrows">
         <button class="text-arrow" data-prev aria-label="Предыдущая фигура">‹</button>
         <button class="text-arrow" data-next aria-label="Следующая фигура">›</button>
@@ -21,9 +25,12 @@ export async function initBeastCarousel(container, { title, entries }, helpers =
   `;
 
   const textEl = container.querySelector(".beast-carousel-text");
+  const stageWrapEl = container.querySelector(".beast-carousel-stage-wrap");
   const stageEl = container.querySelector(".beast-carousel-stage");
   const prevBtn = container.querySelector("[data-prev]");
   const nextBtn = container.querySelector("[data-next]");
+  const hintEl = container.querySelector(".beast-hint");
+  const hint = createOnceHint(hintEl, stageWrapEl);
 
   let index = 0;
   let viewer = null;
@@ -55,10 +62,12 @@ export async function initBeastCarousel(container, { title, entries }, helpers =
     stageEl.innerHTML = "";
     stageEl.classList.remove("revealed");
     viewer = await mountModelViewer(stageEl, { modelPath: entry.modelPath, icon: entry.icon });
+    await viewer.ready; // дожидаемся, чтобы страница/переключение не выглядели "недогруженными"
 
     busy = false;
     prevBtn.disabled = index === 0;
     nextBtn.disabled = index === entries.length - 1;
+    hint.show();
   }
 
   prevBtn.addEventListener("pointerdown", () => show(index - 1));
@@ -68,6 +77,7 @@ export async function initBeastCarousel(container, { title, entries }, helpers =
 
   return {
     destroy() {
+      hint.dispose();
       if (viewer) viewer.destroy();
       if (helpers.setPageTitle) helpers.setPageTitle(title); // возвращаем заголовок как было
     }
