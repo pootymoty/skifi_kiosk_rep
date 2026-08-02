@@ -114,7 +114,7 @@ function goMap() {
 }
 
 // ---------------- OBJECT (общий шаблон, ТЗ п.9-10, + особые раскладки) ----------------
-const objTitleEl = document.getElementById("objTitle");
+const pageTitleEl = document.getElementById("pageTitle");
 const objStandardEl = document.getElementById("objStandard");
 const objCustomEl = document.getElementById("objCustom");
 const stage3dEl = document.getElementById("stage3d");
@@ -147,7 +147,7 @@ async function openObject(id) {
   const data = CONTENT.objects[id];
   if (!data) { console.error("[app] Неизвестный объект: " + id); return; }
 
-  objTitleEl.textContent = data.title;
+  pageTitleEl.textContent = data.title;
   setBackOverride(null); // сбрасываем на всякий случай при каждом открытии объекта
 
   if (stageController && typeof stageController.destroy === "function") {

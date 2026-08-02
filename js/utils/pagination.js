@@ -112,6 +112,15 @@ export class TextPager {
         this.location.classList.add("hidden");
       }
     }
+
+    // Листать нечего — одна секция. Стрелки и точки только мешали бы
+    // (намекали бы на пагинацию, которой по факту нет).
+    const hasMultiplePages = this.sections.length > 1;
+    this.prevBtn.style.display = hasMultiplePages ? "" : "none";
+    this.nextBtn.style.display = hasMultiplePages ? "" : "none";
+    this.dots.style.display = hasMultiplePages ? "" : "none";
+    if (!hasMultiplePages) return;
+
     this.prevBtn.disabled = this.page === 0;
     this.nextBtn.disabled = this.page === this.sections.length - 1;
 

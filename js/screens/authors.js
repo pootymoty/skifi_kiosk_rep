@@ -8,6 +8,7 @@ export function initAuthorsScreen(container, authorsData) {
   const team = authorsData.team || [];
 
   container.innerHTML = `
+    <h2 class="page-title">Авторы</h2>
     <p class="authors-text"></p>
     <div class="authors-team">
       ${team.map((person, i) => `

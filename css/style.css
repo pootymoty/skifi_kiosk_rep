@@ -232,6 +232,15 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hint-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
 /* ================= ОБЪЕКТ ================= */
+/* ---------- заголовок страницы (объект/авторы) ----------
+   Из гайда Figma: 40px Stalinist One — "заголовок для остальных
+   экранов" (в отличие от 80px на главной). В спецификации цвет был
+   #0E0606 (тёмный) — это цвет ФОНА карты, на чёрном фоне такой
+   заголовок был бы не виден, поэтому взял тот же светлый тон, что и
+   у заголовка на главной странице (rgba(243,232,227,.8)). */
+.page-title{margin:0 0 18px; font-family:var(--font-display); font-weight:400;
+  font-size:2.3rem; text-transform:uppercase; color:rgba(243,232,227,0.8);
+  flex:0 0 auto;}
 .obj-body{flex:1; display:flex; flex-direction:column; padding:52px 18px 16px; min-height:0; overflow-y:auto;}
 .obj-standard{flex:1; display:flex; flex-direction:column; min-height:0; gap:14px;}
 .obj-custom{flex:1; min-height:0;}
