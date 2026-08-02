@@ -1,3 +1,17 @@
+/* Шрифты из макета Figma — файлы кладутся в assets/fonts/, см. README.md там.
+   Пока файлов нет — font-display:swap подставит системный шрифт, ничего
+   не сломается. */
+@font-face{
+  font-family:"Stalinist One";
+  src:url("../assets/fonts/stalinist-one.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"Geologica";
+  src:url("../assets/fonts/geologica-light.woff2") format("woff2");
+  font-weight:300; font-style:normal; font-display:swap;
+}
+
 :root{
   --bg:#000000;
   --bg-2:#000000;
@@ -12,6 +26,11 @@
   --line:rgba(255,255,255,0.08);
   --danger:#c96a4a;
   --shadow:0 20px 60px rgba(0,0,0,0.7);
+  /* --- дизайн-система из Figma (экран карты, пока только он) --- */
+  --hero-bg:#0E0606;
+  --hero-text:#F0EEEE;
+  --font-display:"Stalinist One", Georgia, serif;
+  --font-ui:"Geologica", 'Trebuchet MS', sans-serif;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
 /* Плавающая базовая единица шрифта — от неё зависят все rem-размеры
@@ -75,35 +94,66 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 #screen-video.fading-out .intro-fade{opacity:1;}
 .intro-skip{position:absolute; right:22px; bottom:22px;}
 
-/* ================= КАРТА ================= */
-.map-mount{flex:1; display:flex; flex-direction:column; min-height:0;}
-.map-stage{position:relative; flex:1; margin:0 22px 22px; border-radius:6px;
-  overflow:hidden; background:#000;}
-.map-stage::after{content:""; position:absolute; inset:0; pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);}
+/* ================= КАРТА (макет из Figma, экран 1280×720) ================= */
+.map-mount{flex:1; display:grid; place-items:center; min-height:0; overflow:hidden;}
+.map-stage{position:relative; aspect-ratio:16/9; max-width:100%; max-height:100%;
+  width:100%; border-radius:6px; overflow:hidden; background:var(--hero-bg);
+  container-type:inline-size;}
 .map-scrim{position:absolute; inset:0; background:rgba(8,6,4,0.72); opacity:0;
   pointer-events:none; transition:opacity .38s ease; z-index:1;}
 .map-stage.selecting .map-scrim{opacity:1;}
-.map-stage.selecting .authors-fab,
-.map-stage.selecting .restart-video-fab,
-.map-stage.selecting .map-caption-group{opacity:.35; pointer-events:none; transition:opacity .3s ease;}
+.map-stage.selecting .hero-word,
+.map-stage.selecting .hero-eyebrow,
+.map-stage.selecting .hero-btn-authors,
+.map-stage.selecting .hero-btn-restart{opacity:.35; pointer-events:none; transition:opacity .3s ease;}
 .hotspots-layer{position:absolute; inset:0; z-index:2;}
-.map-caption-group{position:absolute; left:28px; bottom:24px; max-width:44%; z-index:2;
-  transition:opacity .3s ease;}
-.map-eyebrow{display:block; margin-bottom:4px; text-align:left;}
-.map-title{font-size:2.1rem; color:var(--parchment); text-align:left; margin:0 0 8px;
-  text-shadow:0 2px 10px rgba(0,0,0,0.8);}
-.authors-fab, .restart-video-fab{position:absolute; right:20px; z-index:2;
-  width:150px; text-align:center; justify-content:center;}
-.authors-fab{bottom:20px;}
-.restart-video-fab{bottom:68px;}
 
-/* --- метка объекта: круглая кнопка (режим по умолчанию, пока нет своих картинок-вырезок) --- */
+/* --- заголовок: 2 больших слова (Stalinist One) + 2 эйбрау-подписи
+   (Geologica) — координаты 1:1 из Figma, просто выражены в % от
+   ширины карты вместо фиксированных пикселей (см. px() в map.js) --- */
+.hero-word{position:absolute; margin:0; z-index:2; white-space:nowrap;
+  font-family:var(--font-display); font-weight:400; text-transform:uppercase;
+  font-size:calc(80 / 1280 * 100cqw); line-height:1.1; color:var(--hero-text);
+  transition:opacity .3s ease;}
+.hero-word-1{left:calc(197 / 1280 * 100cqw); top:calc(272 / 1280 * 100cqw);}
+.hero-word-2{left:calc(555 / 1280 * 100cqw); top:calc(368 / 1280 * 100cqw);}
+.hero-eyebrow{position:absolute; z-index:2; font-family:var(--font-ui); font-weight:300;
+  font-size:calc(32 / 1280 * 100cqw); line-height:1.1; letter-spacing:.01em;
+  color:var(--hero-text); transition:opacity .3s ease;}
+.hero-eyebrow-1{left:calc(638 / 1280 * 100cqw); top:calc(232 / 1280 * 100cqw);}
+.hero-eyebrow-2{left:calc(565 / 1280 * 100cqw); top:calc(451 / 1280 * 100cqw);}
+
+/* --- кнопки-пилюли (Авторы / Заставка) --- */
+.pill-btn{position:absolute; z-index:2; box-sizing:border-box;
+  display:flex; align-items:center; justify-content:center;
+  padding:calc(17/1280*100cqw) calc(47/1280*100cqw);
+  width:calc(200/1280*100cqw); height:calc(51/1280*100cqw);
+  background:rgba(240,238,238,0.2); border:2px solid var(--hero-text); border-radius:100px;
+  font-family:var(--font-ui); font-weight:300; font-size:calc(24/1280*100cqw);
+  letter-spacing:.01em; text-transform:uppercase; color:var(--hero-text); cursor:pointer;
+  transition:opacity .3s ease, background .2s ease;}
+.pill-btn:active{background:rgba(240,238,238,0.35);}
+.hero-btn-restart{left:calc(426/1280*100cqw); top:calc(649/1280*100cqw);}
+.hero-btn-authors{left:calc(653/1280*100cqw); top:calc(649/1280*100cqw);}
+
+/* --- объекты (пантера / человек / ковёр) — картинки с прозрачным фоном,
+   позиция/размер/поворот 1:1 из Figma (heroLayout в content.js) --- */
+.hero-object{position:absolute; transform-origin:center center; cursor:pointer;
+  transition:opacity .3s ease, filter .3s ease;}
+.hero-object-img{width:100%; height:100%; display:block; pointer-events:none;
+  filter:drop-shadow(0 0 6px rgba(230,197,129,0)); transition:filter .3s ease;}
+.map-stage.selecting .hero-object:not(.selected){opacity:0;}
+.hero-object.selected .hero-object-img{
+  filter:drop-shadow(0 0 16px var(--gold-bright)) drop-shadow(0 0 34px rgba(230,197,129,.7));}
+.hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
+
+/* --- метка объекта: круглая кнопка (запасной вариант, если у объекта
+   нет heroLayout из Figma) --- */
 .hotspot{position:absolute; width:112px; height:112px; transform:translate(-50%,-50%);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   transition:opacity .3s ease;}
 /* Все дочерние элементы метки — чисто декоративные и не должны сами
-   становиться "верхним" элементом в точке клика (это важно для нового
+   становиться "верхним" элементом в точке клика (это важно для
    способа определения клика через document.elementsFromPoint в map.js —
    иначе клик по подписи/кольцу не засчитывался бы). */
 .hotspot > *{pointer-events:none;}
@@ -123,24 +173,6 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   white-space:nowrap; font-family:'Trebuchet MS',sans-serif; font-size:1.25rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--parchment); text-shadow:0 2px 6px rgba(0,0,0,0.8);}
 @keyframes pulse{0%,100%{transform:scale(1); opacity:.55;} 50%{transform:scale(1.12); opacity:.15;}}
-
-/* --- метка объекта: картинка-вырезка (данные → content.js → hotspotImage) ---
-   Кликабельна вся картинка (не круглая зона), подсветка идёт по её
-   реальному контуру — drop-shadow работает по alpha-каналу PNG, поэтому
-   отдельно рисовать SVG-обводку не нужно, она получается «бесплатно». */
-.hotspot.hotspot-image-mode{width:var(--hs-w, 120px); height:auto; display:block;}
-.hotspot-cutout{width:100%; height:auto; display:block; pointer-events:none;
-  filter:drop-shadow(0 0 5px rgba(230,197,129,.4)) drop-shadow(0 0 12px rgba(230,197,129,.2));
-  animation:hotspotBreathe 3.6s ease-in-out infinite;
-  transition:transform .3s cubic-bezier(.3,.7,.4,1.4);}
-@keyframes hotspotBreathe{
-  0%,100%{filter:drop-shadow(0 0 5px rgba(230,197,129,.4)) drop-shadow(0 0 12px rgba(230,197,129,.2));}
-  50%{filter:drop-shadow(0 0 9px rgba(230,197,129,.65)) drop-shadow(0 0 20px rgba(230,197,129,.38));}
-}
-.hotspot.hotspot-image-mode.selected .hotspot-cutout{
-  animation:none; transform:scale(1.08);
-  filter:drop-shadow(0 0 14px var(--gold-bright)) drop-shadow(0 0 30px rgba(230,197,129,.85));}
-.hotspot.hotspot-image-mode .label{top:calc(100% + 8px);}
 
 /* shared hint toast */
 .hint-toast{position:absolute; left:50%; bottom:26px; transform:translateX(-50%) translateY(6px);

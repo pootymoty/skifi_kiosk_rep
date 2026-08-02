@@ -28,6 +28,9 @@ export function preloadAll() {
     ),
     ...Object.values(CONTENT.objects).flatMap(o =>
       o.hotspotImage ? [o.hotspotImage] : []
+    ),
+    ...Object.values(CONTENT.objects).flatMap(o =>
+      o.heroLayout ? [o.heroLayout.image] : []
     )
   ].filter(Boolean);
 
@@ -54,6 +57,8 @@ function preloadImage(src) {
   });
 }
 
+const MODEL_TIMEOUT_MS = 8000; // не ждать бесконечно одну зависшую/повреждённую модель
+
 async function preloadModels(paths) {
   if (!paths.length) return;
   let THREE, GLTFLoader;
@@ -68,11 +73,17 @@ async function preloadModels(paths) {
   const loader = new GLTFLoader();
   await Promise.all(paths.map((path) => new Promise((resolve) => {
     if (modelCache.has(path)) { resolve(); return; }
+    let settled = false;
+    const done = () => { if (!settled) { settled = true; resolve(); } };
+    const timer = setTimeout(() => {
+      console.warn("[preload] " + path + " не загрузился за " + MODEL_TIMEOUT_MS + "мс (файл битый/оборвался при закачке?). Продолжаем без него — подгрузится позже, как раньше.");
+      done();
+    }, MODEL_TIMEOUT_MS);
     loader.load(
       path,
-      (gltf) => { modelCache.set(path, gltf.scene); resolve(); },
+      (gltf) => { clearTimeout(timer); modelCache.set(path, gltf.scene); done(); },
       undefined,
-      (err) => { console.warn("[preload] Не удалось предзагрузить " + path, err); resolve(); }
+      (err) => { clearTimeout(timer); console.warn("[preload] Не удалось предзагрузить " + path, err); done(); }
     );
   })));
 }

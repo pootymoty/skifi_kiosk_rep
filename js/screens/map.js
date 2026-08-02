@@ -1,52 +1,63 @@
 // ============================================================
-// Интерактивная карта (ТЗ п.9). Больше НЕТ фоновой картинки —
-// просто чёрный фон, на котором расположены кликабельные объекты
-// по координатам из content.js (hotspot.x/y — проценты от area карты,
-// hotspotWidthPercent — ширина в процентах от ширины карты). Проценты
-// сами по себе одинаково корректно масштабируются на экранах любого
-// размера (от ноутбука до интерактивного стола) при одинаковом
-// соотношении сторон — это не требует отдельной логики.
+// Интерактивная карта — макет из Figma (экран 1280×720 в дизайне).
 //
-// Два режима отображения метки:
-//   - data.hotspotImage задан  → кликабельна вся картинка объекта
-//     (PNG с прозрачностью), подсветка идёт по её реальному контуру.
-//     Клик засчитывается ТОЛЬКО по непрозрачным пикселям картинки —
-//     это важно, когда объекты стоят близко друг к другу: клик по
-//     прозрачному участку одной картинки "проваливается" к тому, что
-//     реально нарисовано под ним (см. hitTestAtPoint).
-//   - не задан → как раньше, круглая кнопка с эмодзи.
-// Если файл по hotspotImage не найден — тихий откат на круглую кнопку.
+// КАК СДЕЛАНО МАСШТАБИРОВАНИЕ: все координаты/размеры/повороты объектов
+// заданы в content.js как есть, один в один из Figma (heroLayout.left/
+// top/width/height/rotate — в пикселях макета 1280×720). В CSS они
+// переводятся в единицы "cqw" (% от ширины родителя, см. .map-stage{
+// container-type:inline-size}) через calc(N/1280*100cqw) — то есть
+// одно и то же число, но выраженное в процентах от реальной ширины
+// карты. За счёт этого макет масштабируется идентично что на ноутбуке,
+// что на интерактивном столе — реальные пиксели тут вообще не хранятся,
+// хранится только ПРОПОРЦИЯ относительно ширины экрана 1280.
 //
-// При касании — короткая «разгонка» перед переходом (сцена
-// притемняется, выбранный объект подсвечивается сильнее и чуть
-// увеличивается), и только потом происходит сам переход на экран
-// объекта — вместо мгновенного жёсткого переключения.
+// Три объекта (пантера/человек/ковёр) — картинки с прозрачным фоном,
+// повёрнутые под углом (как в макете). Клик засчитывается только по
+// непрозрачным пикселям, и это работает даже с учётом поворота —
+// см. hitTestAtPoint (переводит точку клика в локальные координаты
+// картинки, отменяя поворот, прежде чем проверять альфа-канал).
 // ============================================================
 import { createOnceHint } from "../utils/hints.js";
 
 const SELECT_DELAY_MS = 380;
-const ALPHA_THRESHOLD = 15; // 0-255, ниже — считаем пиксель прозрачным (клик "проваливается" дальше)
+const ALPHA_THRESHOLD = 15; // 0-255, ниже — пиксель считается прозрачным
+const REF_W = 1280; // ширина макета в Figma — точка отсчёта для всех calc()
+
+function px(n) { return `calc(${n} / ${REF_W} * 100cqw)`; }
 
 export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo, showHint) {
+  const heroEntries = Object.entries(objects).filter(([, d]) => d.heroLayout);
+  const fallbackEntries = Object.entries(objects).filter(([, d]) => !d.heroLayout);
+
   container.innerHTML = `
     <div class="map-stage">
       <div class="map-scrim"></div>
+
+      <div class="hero-eyebrow hero-eyebrow-1" data-eyebrow="1"></div>
+      <h1 class="hero-word hero-word-1" data-word="1"></h1>
+      <h1 class="hero-word hero-word-2" data-word="2"></h1>
+      <div class="hero-eyebrow hero-eyebrow-2" data-eyebrow="2"></div>
+
       <div class="hotspots-layer"></div>
-      <div class="map-caption-group">
-        <span class="eyebrow map-eyebrow">Интерактивная экспозиция</span>
-        <h1 class="map-title">Скифы Алтая · Древности Сибири</h1>
-      </div>
-      <button class="btn authors-fab">Авторы</button>
-      <button class="btn restart-video-fab" title="Переиграть видео-заставку">Заставка</button>
+
+      <button class="pill-btn hero-btn-authors">Авторы</button>
+      <button class="pill-btn hero-btn-restart" title="Переиграть видео-заставку">Заставка</button>
+
       <div class="hint-toast map-hint">Нажмите на объект, чтобы узнать больше</div>
     </div>
   `;
 
   const stage = container.querySelector(".map-stage");
   const layer = container.querySelector(".hotspots-layer");
-  const authorsBtn = container.querySelector(".authors-fab");
-  const restartVideoBtn = container.querySelector(".restart-video-fab");
+  const authorsBtn = container.querySelector(".hero-btn-authors");
+  const restartVideoBtn = container.querySelector(".hero-btn-restart");
   const hintEl = container.querySelector(".map-hint");
+
+  // Заголовок — два слова + эйбрау-подписи рядом с каждым (см. content.js → map.title)
+  container.querySelector('[data-word="1"]').textContent = mapData.title?.line1 || "";
+  container.querySelector('[data-word="2"]').textContent = mapData.title?.line2 || "";
+  container.querySelector('[data-eyebrow="1"]').textContent = mapData.eyebrow1 || "";
+  container.querySelector('[data-eyebrow="2"]').textContent = mapData.eyebrow2 || "";
 
   function roundMarkup(data) {
     return `<div class="ring"></div><div class="ring2"></div>
@@ -54,9 +65,8 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       <div class="label">${data.title}</div>`;
   }
 
-  let transitioning = false; // блокируем повторный тап, пока идёт «разгонка»
-  const sizedHotspots = []; // {el, percent} — картинки-вырезки, чей размер надо пересчитывать при ресайзе
-  const alphaMap = new Map(); // hotspot-элемент → { natW, natH, data } для точного хит-теста по прозрачности
+  let transitioning = false;
+  const alphaMap = new Map(); // hotspot-элемент → { natW, natH, data, left, top, width, height, rotate } (в px макета 1280×720)
 
   function selectHotspot(id, el) {
     if (transitioning) return;
@@ -66,41 +76,43 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     setTimeout(() => onSelect(id), SELECT_DELAY_MS);
   }
 
-  Object.entries(objects).forEach(([id, data]) => {
+  // --- объекты с точной раскладкой из Figma (heroLayout) ---
+  heroEntries.forEach(([id, data]) => {
+    const L = data.heroLayout;
+    const hs = document.createElement("div");
+    hs.className = "hotspot hero-object";
+    hs.dataset.id = id;
+    hs.style.left = px(L.left);
+    hs.style.top = px(L.top);
+    hs.style.width = px(L.width);
+    hs.style.height = px(L.height);
+    hs.style.transform = `rotate(${L.rotate}deg)`;
+    hs.innerHTML = `<img class="hero-object-img" src="${L.image}" alt="" draggable="false">`;
+
+    const img = hs.querySelector(".hero-object-img");
+    img.addEventListener("error", () => {
+      console.warn("[map] Файл не найден: " + L.image + " (объект «" + data.title + "»). Метка временно невидима, но кликабельна по всей área (запасной вариант).");
+      hs.classList.add("hero-object-missing");
+    });
+    img.addEventListener("load", () => {
+      buildAlphaMask(hs, img, L);
+    });
+
+    layer.appendChild(hs);
+  });
+
+  // --- объекты без heroLayout (запасной путь — старая круглая кнопка по центру) ---
+  fallbackEntries.forEach(([id, data]) => {
     const hs = document.createElement("div");
     hs.className = "hotspot";
     hs.dataset.id = id;
     hs.style.left = data.hotspot.x + "%";
     hs.style.top = data.hotspot.y + "%";
-
-    if (data.hotspotImage) {
-      hs.classList.add("hotspot-image-mode");
-      hs.innerHTML = `
-        <img class="hotspot-cutout" src="${data.hotspotImage}" alt="" draggable="false">
-        <div class="label">${data.title}</div>
-      `;
-      const img = hs.querySelector(".hotspot-cutout");
-      img.addEventListener("error", () => {
-        console.warn("[map] Файл не найден: " + data.hotspotImage + ". Показана круглая кнопка вместо картинки-вырезки.");
-        hs.classList.remove("hotspot-image-mode");
-        hs.innerHTML = roundMarkup(data);
-      });
-      img.addEventListener("load", () => buildAlphaMask(hs, img));
-      // Ширина вырезки — в процентах от карты, а не в фиксированных
-      // пикселях, чтобы она увеличивалась/уменьшалась ВМЕСТЕ с самой
-      // картой на разных экранах, а не оставалась одного размера всегда.
-      sizedHotspots.push({ el: hs, percent: data.hotspotWidthPercent || 9 });
-    } else {
-      hs.innerHTML = roundMarkup(data);
-    }
-
+    hs.innerHTML = roundMarkup(data);
     layer.appendChild(hs);
   });
 
-  // Строим оффскрин-канвас с альфа-каналом картинки один раз при
-  // загрузке — дальше просто читаем из готового пиксельного массива,
-  // это дёшево даже при частых кликах.
-  function buildAlphaMask(hs, img) {
+  function buildAlphaMask(hs, img, L) {
     const w = img.naturalWidth, h = img.naturalHeight;
     if (!w || !h) return;
     const canvas = document.createElement("canvas");
@@ -110,30 +122,40 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     ctx.drawImage(img, 0, 0, w, h);
     try {
       const data = ctx.getImageData(0, 0, w, h).data;
-      alphaMap.set(hs, { natW: w, natH: h, data });
+      alphaMap.set(hs, { natW: w, natH: h, data, left: L.left, top: L.top, width: L.width, height: L.height, rotate: L.rotate });
     } catch (err) {
       console.warn("[map] Не удалось прочитать пиксели " + img.src + " для точного хит-теста.", err);
     }
   }
 
+  // Проверка «попал ли клик в непрозрачную часть картинки» — с учётом
+  // поворота: переводим точку клика в СОБСТВЕННУЮ (неповёрнутую) систему
+  // координат картинки, отменяя поворот вокруг её центра, и только потом
+  // сравниваем с прямоугольником и альфа-каналом.
   function isOpaqueAt(hs, clientX, clientY) {
     const mask = alphaMap.get(hs);
-    if (!mask) return true; // круглая кнопка (или маска ещё не построена) — считаем попаданием как раньше
-    const rect = hs.getBoundingClientRect();
-    if (!rect.width || !rect.height) return false;
-    const fx = (clientX - rect.left) / rect.width;
-    const fy = (clientY - rect.top) / rect.height;
+    if (!mask) return true; // круглая кнопка (или маска ещё не готова) — считаем попаданием, как раньше
+    const stageRect = stage.getBoundingClientRect();
+    const scale = stageRect.width / REF_W;
+
+    const cx = stageRect.left + (mask.left + mask.width / 2) * scale;
+    const cy = stageRect.top + (mask.top + mask.height / 2) * scale;
+    const rad = -mask.rotate * Math.PI / 180;
+    const dx = clientX - cx, dy = clientY - cy;
+    const localX = dx * Math.cos(rad) - dy * Math.sin(rad);
+    const localY = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+    const halfW = (mask.width * scale) / 2, halfH = (mask.height * scale) / 2;
+    const fx = (localX + halfW) / (halfW * 2);
+    const fy = (localY + halfH) / (halfH * 2);
     if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return false;
-    const px = Math.min(mask.natW - 1, Math.floor(fx * mask.natW));
-    const py = Math.min(mask.natH - 1, Math.floor(fy * mask.natH));
-    const alpha = mask.data[(py * mask.natW + px) * 4 + 3];
+
+    const px_ = Math.min(mask.natW - 1, Math.floor(fx * mask.natW));
+    const py_ = Math.min(mask.natH - 1, Math.floor(fy * mask.natH));
+    const alpha = mask.data[(py_ * mask.natW + px_) * 4 + 3];
     return alpha > ALPHA_THRESHOLD;
   }
 
-  // Один делегированный слушатель на весь слой меток вместо отдельного
-  // на каждую метку — так можно правильно обработать перекрытие: если
-  // верхняя картинка в этой точке прозрачна, проверяем следующую под
-  // ней (document.elementsFromPoint возвращает их в порядке сверху вниз).
   layer.addEventListener("pointerdown", (e) => {
     if (transitioning) return;
     const candidates = document.elementsFromPoint(e.clientX, e.clientY)
@@ -146,17 +168,6 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     }
   });
 
-  function layoutHotspotSizes() {
-    const stageW = stage.clientWidth;
-    if (!stageW) return;
-    sizedHotspots.forEach(({ el, percent }) => {
-      el.style.setProperty("--hs-w", (stageW * percent / 100) + "px");
-    });
-  }
-  layoutHotspotSizes();
-  const sizeObserver = new ResizeObserver(layoutHotspotSizes);
-  sizeObserver.observe(stage);
-
   authorsBtn.addEventListener("pointerdown", () => {
     if (transitioning) return;
     onAuthors();
@@ -164,7 +175,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
 
   restartVideoBtn.addEventListener("pointerdown", () => {
     if (transitioning) return;
-    onRestartVideo(true); // true = пользователь вручную нажал кнопку, переключиться на таймер 20 сек
+    onRestartVideo(true);
   });
 
   const hint = createOnceHint(hintEl, layer);
@@ -173,7 +184,6 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   return {
     destroy() {
       hint.dispose();
-      sizeObserver.disconnect();
     }
   };
 }
