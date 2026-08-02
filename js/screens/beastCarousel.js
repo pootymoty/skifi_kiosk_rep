@@ -2,9 +2,9 @@
 // Экран «Скифский звериный стиль» (см. js/data/content.js →
 // objects.panther.entries): три фигурки листаются ОДНОЙ парой стрелок
 // (не по отдельности) — при переключении меняются разом модель,
-// заголовок страницы и текст. Модель — справа, текст — слева
-// (см. css/style.css → .beast-carousel), заголовок — общий .page-title
-// в шапке страницы (передаём через helpers.setPageTitle).
+// заголовок страницы и текст. Стрелки — просто переключение отображения
+// одной модели на другую + замена текста, БЕЗ зацикливания: на первой
+// фигурке «‹» неактивна, на последней неактивна «›».
 // ============================================================
 import { mountModelViewer } from "./object3d.js";
 
@@ -27,9 +27,16 @@ export async function initBeastCarousel(container, { title, entries }, helpers =
 
   let index = 0;
   let viewer = null;
+  let busy = false; // блокируем повторное нажатие, пока идёт переключение — раньше это и вызывало "кривое" листание
 
   async function show(i) {
-    index = ((i % entries.length) + entries.length) % entries.length;
+    if (busy) return;
+    if (i < 0 || i > entries.length - 1) return; // без зацикливания: за края не выходим
+    busy = true;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+
+    index = i;
     const entry = entries[index];
 
     if (helpers.setPageTitle) helpers.setPageTitle(entry.pageTitle || title);
@@ -41,10 +48,17 @@ export async function initBeastCarousel(container, { title, entries }, helpers =
     `;
 
     if (viewer) { viewer.destroy(); viewer = null; }
+    // ВАЖНО: mountModelViewer только ДОБАВЛЯЕТ элементы (canvas/значок
+    // загрузки), сам не очищает контейнер — раньше именно это и было
+    // причиной "кривого" листания: старые canvas оставались висеть друг
+    // на друге при каждом переключении. Чистим явно перед новым монтированием.
+    stageEl.innerHTML = "";
+    stageEl.classList.remove("revealed");
     viewer = await mountModelViewer(stageEl, { modelPath: entry.modelPath, icon: entry.icon });
 
-    prevBtn.disabled = false;
-    nextBtn.disabled = false;
+    busy = false;
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === entries.length - 1;
   }
 
   prevBtn.addEventListener("pointerdown", () => show(index - 1));
