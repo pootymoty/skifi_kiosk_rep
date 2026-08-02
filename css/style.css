@@ -201,18 +201,23 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* --- сетка из нескольких моделей на одном экране (напр. «Скифский
    звериный стиль» — 3 модели рядом, каждая со своей независимой
    анимацией появления и своим таймером простоя) --- */
-.stage-3d.multi-mode{opacity:1; transform:none; display:flex; gap:8px; padding:0;}
-.stage-3d-cell{position:relative; flex:1; min-width:0; height:100%; border-radius:0; overflow:hidden;
+.stage-3d.multi-mode{opacity:1; transform:none; display:flex; gap:8px; padding:0; position:relative;}
+.stage-3d-cell{position:relative; z-index:2; flex:1; min-width:0; height:100%; border-radius:0; overflow:hidden;
   background:transparent;
   display:flex; align-items:center; justify-content:center;
   opacity:0; transform:scale(.9); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.3,1);}
 .stage-3d-cell.revealed{opacity:1; transform:scale(1);}
-.stage-3d-cell canvas{width:100%!important; height:100%!important; display:block;}
 .stage-3d-cell .cell-label{position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
   font-family:'Trebuchet MS',sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--parchment); background:rgba(0,0,0,0.45); padding:3px 9px; border-radius:10px; z-index:2;
   white-space:nowrap;}
 .stage-3d-cell .asset-missing-note{font-size:9px; padding:3px 6px;}
+
+/* --- индикатор загрузки модели/картинки при первом (ленивом) открытии --- */
+.stage-spinner{position:absolute; top:50%; left:50%; width:34px; height:34px;
+  margin:-17px 0 0 -17px; border-radius:50%; border:2px solid rgba(255,255,255,0.12);
+  border-top-color:var(--gold); animation:spin .8s linear infinite; z-index:3;}
+@keyframes spin{to{transform:rotate(360deg);}}
 .model-card{position:relative; width:150px; height:190px; transform-style:preserve-3d; will-change:transform;}
 .model-face{position:absolute; inset:0; border-radius:10px; backface-visibility:hidden;
   display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
@@ -382,12 +387,11 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .beast-text .text-content p{font-size:1.1rem; line-height:1.45; font-weight:300;}
 .beast-text.area-t4 .text-content{align-items:center; text-align:center;}
 .beast-text.area-t4 .text-content p{max-width:640px; margin-left:auto; margin-right:auto;}
-.beast-model{position:relative; border-radius:0; overflow:hidden;
+.beast-model{position:relative; z-index:2; border-radius:0; overflow:hidden;
   background:transparent;
   display:flex; align-items:center; justify-content:center;
   opacity:0; transform:scale(.9); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.3,1);}
 .beast-model.revealed{opacity:1; transform:scale(1);}
-.beast-model canvas{width:100%!important; height:100%!important; display:block;}
 .beast-model .cell-label{position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
   font-family:'Trebuchet MS',sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--parchment); background:rgba(0,0,0,0.45); padding:3px 9px; border-radius:10px; z-index:2;

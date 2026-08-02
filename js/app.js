@@ -6,7 +6,7 @@ import { CONTENT } from "./data/content.js";
 import { TextPager } from "./utils/pagination.js";
 import { createOnceHint } from "./utils/hints.js";
 import { createGlobalIdleWatcher } from "./utils/idle.js";
-import { preloadAll } from "./utils/preload.js";
+import { preloadHeroImages } from "./utils/preload.js";
 import { initVideoScreen } from "./screens/video.js";
 import { initMapScreen } from "./screens/map.js";
 import { initObjectStage3D } from "./screens/object3d.js";
@@ -24,6 +24,7 @@ const FIRST_IDLE_MS = 20 * 1000;       // 20 секунд без первого 
 const REPEAT_IDLE_MS = 5 * 60 * 1000;  // 5 минут после любого взаимодействия
 
 const screens = {
+  boot: document.getElementById("screen-boot"),
   video: document.getElementById("screen-video"),
   map: document.getElementById("screen-map"),
   object: document.getElementById("screen-object"),
@@ -119,6 +120,17 @@ const objCustomEl = document.getElementById("objCustom");
 const stage3dEl = document.getElementById("stage3d");
 const stage2dEl = document.getElementById("stage2d");
 const backBtn = document.getElementById("btnBackFromObject");
+const backBtnDefaultLabel = backBtn.textContent;
+
+// Позволяет текущему экрану временно "перехватить" глобальную кнопку
+// «Назад» — например, у ковра при открытой «дырке» она должна на
+// время стать кнопкой «Ковёр целиком» вместо перехода на карту
+// (см. js/screens/carpetSplit.js). null — обычное поведение (на карту).
+let backOverride = null;
+function setBackOverride(handler, label) {
+  backOverride = handler || null;
+  backBtn.textContent = backOverride ? label : backBtnDefaultLabel;
+}
 
 const pager = new TextPager({
   heading: document.getElementById("txtHeading"),
@@ -136,6 +148,7 @@ async function openObject(id) {
   if (!data) { console.error("[app] Неизвестный объект: " + id); return; }
 
   objTitleEl.textContent = data.title;
+  setBackOverride(null); // сбрасываем на всякий случай при каждом открытии объекта
 
   if (stageController && typeof stageController.destroy === "function") {
     stageController.destroy();
@@ -155,7 +168,7 @@ async function openObject(id) {
   } else if (data.layout === "carpet-split") {
     objStandardEl.style.display = "none";
     objCustomEl.classList.remove("hidden");
-    stageController = initCarpetSplit(objCustomEl, data);
+    stageController = initCarpetSplit(objCustomEl, data, { setBackOverride });
 
   } else {
     // Стандартный шаблон (на случай новых объектов без своей раскладки)
@@ -187,6 +200,7 @@ async function openObject(id) {
 }
 
 backBtn.addEventListener("pointerdown", () => {
+  if (backOverride) { backOverride(); return; }
   if (stageController && typeof stageController.destroy === "function") {
     stageController.destroy();
   }
@@ -205,8 +219,22 @@ document.getElementById("btnBackFromAuthors").addEventListener("pointerdown", ()
 });
 
 // ---------------- START ----------------
-startIntro();
-// Предзагрузка всех моделей/картинок — запускается один раз, параллельно
-// с показом видео, чтобы к моменту, когда пользователь дойдёт до карты
-// и начнёт открывать объекты, всё уже было готово (см. js/utils/preload.js).
-preloadAll();
+// Видео стартует, как только загрузятся 3 картинки объектов карты
+// (они нужны сразу же после видео — не хочется, чтобы карта
+// доскрёбывала их у пользователя на глазах). Модели и остальные
+// картинки теперь грузятся ЛЕНИВО — только когда пользователь
+// реально открыл нужную страницу (см. js/utils/preload.js).
+// Предохранитель на случай зависшей/битой картинки — ждать вечно
+// нельзя, лучше стартовать без неё.
+const BOOT_TIMEOUT_MS = 5000;
+
+function boot() {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    preloadHeroImages().then(finish);
+    setTimeout(finish, BOOT_TIMEOUT_MS);
+  });
+}
+
+boot().then(startIntro);

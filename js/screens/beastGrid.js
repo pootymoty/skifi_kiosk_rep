@@ -7,12 +7,16 @@
 //   ряд 3:  текст t4 (по центру, во всю ширину)
 //
 // Модели ищутся по подписи (label), поэтому их порядок в content.js
-// значения не имеет. Каждая модель — независимая ячейка с собственным
-// автовращением/сбросом простоя (см. js/screens/object3d.js → mountModelViewer).
+// значения не имеет. Раньше каждая модель рендерилась своим отдельным
+// WebGL-рендерером — три параллельных GL-контекста заметно подвисали.
+// Теперь все три модели рендерятся ОДНИМ общим рендерером через
+// scissor/viewport (см. js/screens/object3d.js → mountModelGroup) —
+// взаимодействие (вращение/автовращение/сброс) у каждой по-прежнему
+// независимое, просто сама отрисовка общая.
 // Каждый текстовый блок — независимый пейджер (стрелки ‹ › + квадратики),
 // см. js/utils/textBlock.js.
 // ============================================================
-import { mountModelViewer } from "./object3d.js";
+import { mountModelGroup } from "./object3d.js";
 import { createTextBlock } from "../utils/textBlock.js";
 
 export async function initBeastGrid(container, { models, texts }) {
@@ -39,19 +43,15 @@ export async function initBeastGrid(container, { models, texts }) {
     createTextBlock(container.querySelector(".area-t4"), texts.t4)
   ];
 
-  const m1 = container.querySelector(".area-m1");
-  const m2 = container.querySelector(".area-m2");
-  const m3 = container.querySelector(".area-m3");
-
-  const viewers = await Promise.all([
-    mountModelViewer(m1, combined, { lite: true }),
-    mountModelViewer(m2, deer, { lite: true }),
-    mountModelViewer(m3, panther, { lite: true })
+  const modelGroup = await mountModelGroup([
+    { el: container.querySelector(".area-m1"), modelConfig: combined },
+    { el: container.querySelector(".area-m2"), modelConfig: deer },
+    { el: container.querySelector(".area-m3"), modelConfig: panther }
   ]);
 
   return {
     destroy() {
-      viewers.forEach((c) => c.destroy());
+      modelGroup.destroy();
       pagers.forEach((p) => p.destroy());
     }
   };
