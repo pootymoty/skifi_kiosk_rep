@@ -174,7 +174,10 @@ async function openObject(id) {
   } else if (data.layout === "carpet-split") {
     objStandardEl.style.display = "none";
     objCustomEl.classList.remove("hidden");
-    stageController = await initCarpetSplit(objCustomEl, data);
+    stageController = await initCarpetSplit(objCustomEl, data, {
+      setBackOverride,
+      setPageTitle: (t) => { pageTitleEl.textContent = t; }
+    });
 
   } else {
     // Стандартный шаблон (на случай новых объектов без своей раскладки)

@@ -5,11 +5,13 @@
 //    в область по своим фактическим краям, панорамирование при
 //    увеличении жёстко ограничено этими же краями.
 // 2. Интерактивная зона (см. content.js → carpet.hole): подсвеченная
-//    метка на месте повреждения ковра. При касании открывается
-//    ВСПЛЫВАЮЩЕЕ ОКНО (не замена страницы) — заголовок сюжета сверху,
-//    текст слева, восстановленный фрагмент справа, и своя кнопка
-//    «Назад к ковру» рядом с «Меню» (обе видны одновременно). Кнопка
-//    закрывает окно и возвращает обычный вид ковра.
+//    метка на месте повреждения ковра. При касании страница визуально
+//    превращается в свой же шаблон с другим содержимым — картинка
+//    в той же области меняется на восстановленный фрагмент, текст и
+//    заголовок страницы тоже меняются (см. onSectionsChange/
+//    onTitleChange), а кнопка «Меню» временно становится «Назад к
+//    ковру» (см. onHoleToggle). Это не отдельное всплывающее окно —
+//    та же раскладка, просто с другими данными.
 // 3. Подсказка «Приближай» — показывается один раз при открытии
 //    страницы, исчезает при первом касании изображения.
 // ============================================================
@@ -18,12 +20,10 @@ import { createOnceHint } from "../utils/hints.js";
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 
-export function initObjectStage2D(container, { imagePath, hole, baseSections, onSectionsChange, onHoleToggle }) {
+export function initObjectStage2D(container, { imagePath, hole, baseSections, onSectionsChange, onTitleChange, onHoleToggle }) {
   // Сбрасываем анимацию появления с прошлого показа — контейнер
   // (#stage2d) переиспользуется при каждом открытии объекта.
   container.classList.remove("revealed");
-
-  const holeText = hole && hole.sections && hole.sections[0] ? hole.sections[0] : null;
 
   container.innerHTML = `
     <div class="canvas2d-wrap">
@@ -31,19 +31,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
         <img class="canvas2d-img base-img" alt="" draggable="false">
         <div class="hole-marker hidden">
           <div class="ring"></div><div class="ring2"></div>
-        </div>
-      </div>
-      <div class="hole-detail-overlay hidden">
-        <div class="hole-detail-inner">
-          <h3 class="hole-detail-title">${hole && hole.title ? hole.title : ""}</h3>
-          <div class="hole-detail-body">
-            <div class="hole-detail-text">${holeText ? `<p>${holeText.t}</p>` : ""}</div>
-            <div class="hole-detail-img-wrap">
-              <img class="hole-detail-img" alt="" draggable="false">
-              <div class="asset-missing-note hidden"></div>
-            </div>
-          </div>
-          <button class="btn ghost hole-detail-back">Назад к ковру</button>
         </div>
       </div>
       <div class="asset-missing-note base-missing hidden"></div>
@@ -56,48 +43,45 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const baseImg = container.querySelector(".base-img");
   const marker = container.querySelector(".hole-marker");
   const badge = container.querySelector(".base-missing");
-  const detailOverlay = container.querySelector(".hole-detail-overlay");
-  const detailImg = container.querySelector(".hole-detail-img");
-  const detailBadge = detailOverlay.querySelector(".asset-missing-note");
-  const detailBackBtn = detailOverlay.querySelector(".hole-detail-back");
   const hintEl = container.querySelector(".stage-hint");
   const hint = createOnceHint(hintEl, wrap);
+
+  let inDetail = false;
+  let natW = 0, natH = 0;
 
   // ---------------- загрузка изображений ----------------
   let resolveReady;
   const readyPromise = new Promise((resolve) => { resolveReady = resolve; });
+  let firstLoad = true;
   function revealNow() {
     requestAnimationFrame(() => container.classList.add("revealed"));
     hint.show();
-    resolveReady();
+    if (firstLoad) { firstLoad = false; resolveReady(); }
   }
-  let natW = 0, natH = 0;
+  function loadImage(src, isDetail) {
+    badge.classList.add("hidden");
+    wrap.classList.remove("no-image");
+    baseImg.src = src;
+    baseImg.dataset.detail = isDetail ? "1" : "";
+  }
   baseImg.addEventListener("load", () => {
     natW = baseImg.naturalWidth; natH = baseImg.naturalHeight;
-    layoutMarker();
+    if (!inDetail) layoutMarker(); // в режиме "детали" метки на фрагменте нет
     revealNow();
   });
   baseImg.addEventListener("error", () => {
-    console.warn("[2D] Файл не найден: " + imagePath + ". Показана заглушка.");
+    const missing = baseImg.dataset.detail ? hole.patchImage : imagePath;
+    console.warn("[2D] Файл не найден: " + missing + ". Показана заглушка.");
     wrap.classList.add("no-image");
-    badge.textContent = "Файл не найден: " + imagePath;
+    badge.textContent = "Файл не найден: " + missing;
     badge.classList.remove("hidden");
     revealNow(); // заглушка тоже должна появиться, а не остаться невидимой
   });
-  baseImg.src = imagePath;
-
-  if (hole && hole.patchImage) {
-    detailImg.addEventListener("error", () => {
-      console.warn("[2D] Файл не найден: " + hole.patchImage);
-      detailBadge.textContent = "Файл не найден: " + hole.patchImage;
-      detailBadge.classList.remove("hidden");
-    });
-    detailImg.src = hole.patchImage;
-  }
+  loadImage(imagePath, false);
 
   // ---------------- метка «дырки» на карте (позиция в % от картинки) ----------------
   function layoutMarker() {
-    if (!hole || !natW || !natH) return;
+    if (!hole || !natW || !natH || inDetail) return;
     const cw = wrap.clientWidth, ch = wrap.clientHeight;
     if (!cw || !ch) return;
     const rect = containRect(cw, ch, natW, natH);
@@ -115,9 +99,8 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   const ro = new ResizeObserver(layoutMarker);
   ro.observe(wrap);
 
-  // ---------------- состояние трансформации (только для обзора ковра) ----------------
+  // ---------------- состояние трансформации (сбрасывается при входе/выходе из "детали") ----------------
   let tx = 0, ty = 0, scale = 1;
-  let inDetail = false;
 
   function clamp() {
     const cw = wrap.clientWidth, ch = wrap.clientHeight;
@@ -129,27 +112,35 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   function apply() {
     pan.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
   }
+  function resetTransform() {
+    tx = 0; ty = 0; scale = 1;
+    apply();
+  }
 
-  // ---------------- вход/выход из «детали» (дырка → всплывающее окно) ----------------
+  // ---------------- вход/выход из «детали» (дырка → тот же шаблон, другое содержимое) ----------------
   function enterDetail() {
     if (!hole || inDetail) return;
     inDetail = true;
     hintEl.classList.remove("show");
-    detailOverlay.classList.remove("hidden");
-    requestAnimationFrame(() => detailOverlay.classList.add("show"));
-    if (onHoleToggle) onHoleToggle(true);
+    marker.classList.add("hidden");
+    resetTransform();
+    loadImage(hole.patchImage, true);
+    if (onSectionsChange && hole.sections) onSectionsChange(hole.sections);
+    if (onTitleChange && hole.title) onTitleChange(hole.title);
+    if (onHoleToggle) onHoleToggle(true, exitDetail);
   }
 
   function exitDetail() {
     if (!inDetail) return;
     inDetail = false;
-    detailOverlay.classList.remove("show");
-    setTimeout(() => detailOverlay.classList.add("hidden"), 350);
+    resetTransform();
+    loadImage(imagePath, false);
+    if (onSectionsChange && baseSections) onSectionsChange(baseSections);
+    if (onTitleChange) onTitleChange(null); // null = вернуть исходный заголовок страницы
     if (onHoleToggle) onHoleToggle(false);
   }
 
   marker.addEventListener("pointerdown", (e) => { e.stopPropagation(); enterDetail(); });
-  detailBackBtn.addEventListener("pointerdown", exitDetail);
 
   // ---------------- обычные жесты: перетаскивание / pinch / колесо ----------------
   let dragging = false, lastX = 0, lastY = 0;
@@ -158,7 +149,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
   wrap.addEventListener("pointerdown", (e) => {
-    if (inDetail) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
     else if (pointers.size === 2) {
@@ -170,7 +160,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     wrap.setPointerCapture(e.pointerId);
   });
   wrap.addEventListener("pointermove", (e) => {
-    if (inDetail || !pointers.has(e.pointerId)) return;
+    if (!pointers.has(e.pointerId)) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
       const pts = [...pointers.values()];
@@ -194,7 +184,6 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
   wrap.addEventListener("pointercancel", release);
 
   function onWheel(e) {
-    if (inDetail) return;
     e.preventDefault();
     scale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, scale - e.deltaY * 0.0015));
     clamp(); apply();
@@ -209,6 +198,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
       ro.disconnect();
       wrap.removeEventListener("wheel", onWheel);
       hint.dispose();
+      if (inDetail && onHoleToggle) onHoleToggle(false); // подстраховка: не оставить кнопку «застрявшей»
     }
   };
 }
