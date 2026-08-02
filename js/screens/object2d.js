@@ -64,9 +64,18 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     baseImg.src = src;
     baseImg.dataset.detail = isDetail ? "1" : "";
   }
+  // Плавная смена картинки при входе/выходе из "детали" — сначала
+  // уводим текущую в прозрачность, и только потом (когда её не видно)
+  // подставляем новую и возвращаем видимость.
+  const SWAP_FADE_MS = 220;
+  function swapImage(src, isDetail) {
+    baseImg.classList.add("fading");
+    setTimeout(() => loadImage(src, isDetail), SWAP_FADE_MS);
+  }
   baseImg.addEventListener("load", () => {
     natW = baseImg.naturalWidth; natH = baseImg.naturalHeight;
     if (!inDetail) layoutMarker(); // в режиме "детали" метки на фрагменте нет
+    baseImg.classList.remove("fading");
     revealNow();
   });
   baseImg.addEventListener("error", () => {
@@ -75,6 +84,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     wrap.classList.add("no-image");
     badge.textContent = "Файл не найден: " + missing;
     badge.classList.remove("hidden");
+    baseImg.classList.remove("fading");
     revealNow(); // заглушка тоже должна появиться, а не остаться невидимой
   });
   loadImage(imagePath, false);
@@ -124,7 +134,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     hintEl.classList.remove("show");
     marker.classList.add("hidden");
     resetTransform();
-    loadImage(hole.patchImage, true);
+    swapImage(hole.patchImage, true);
     if (onSectionsChange && hole.sections) onSectionsChange(hole.sections);
     if (onTitleChange && hole.title) onTitleChange(hole.title);
     if (onHoleToggle) onHoleToggle(true, exitDetail);
@@ -134,7 +144,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     if (!inDetail) return;
     inDetail = false;
     resetTransform();
-    loadImage(imagePath, false);
+    swapImage(imagePath, false);
     if (onSectionsChange && baseSections) onSectionsChange(baseSections);
     if (onTitleChange) onTitleChange(null); // null = вернуть исходный заголовок страницы
     if (onHoleToggle) onHoleToggle(false);

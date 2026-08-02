@@ -24,15 +24,28 @@ export async function initCarpetSplit(container, data, helpers = {}) {
   const textEl = container.querySelector(".carpet-split-text");
   const pager = createTextBlock(textEl, data.sections, { arrowsBelow: true, extraClass: "carpet-text-aligned" });
 
+  // Плавная смена заголовка страницы — ТОЛЬКО для этого перехода
+  // (касание "дырки" / кнопка "Ковёр целиком"), общий механизм в
+  // app.js не трогаем, на остальных страницах заголовок по-прежнему
+  // меняется мгновенно.
+  const pageTitleEl = document.getElementById("pageTitle");
+  const TITLE_FADE_MS = 220;
+  function fadeTitleTo(text) {
+    if (!helpers.setPageTitle) return;
+    pageTitleEl.classList.add("fading");
+    setTimeout(() => {
+      helpers.setPageTitle(text);
+      pageTitleEl.classList.remove("fading");
+    }, TITLE_FADE_MS);
+  }
+
   const stageEl = container.querySelector(".carpet-split-stage");
   const stage2d = initObjectStage2D(stageEl, {
     imagePath: data.image,
     hole: data.hole,
     baseSections: data.sections,
     onSectionsChange: (sections) => pager.setSections(sections),
-    onTitleChange: (title) => {
-      if (helpers.setPageTitle) helpers.setPageTitle(title || data.title);
-    },
+    onTitleChange: (title) => fadeTitleTo(title || data.title),
     onHoleToggle: (isOpen, exitFn) => {
       if (helpers.setBackOverride) {
         helpers.setBackOverride(isOpen ? exitFn : null, "Назад к ковру");

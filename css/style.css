@@ -231,7 +231,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    у заголовка на главной странице (rgba(243,232,227,.8)). */
 .page-title{margin:0 0 18px; font-family:var(--font-display); font-weight:400;
   font-size:2.3rem; text-transform:uppercase; color:rgba(243,232,227,0.8);
-  flex:0 0 auto;}
+  flex:0 0 auto; transition:opacity .25s ease;}
+.page-title.fading{opacity:0;}
 .obj-body{flex:1; display:flex; flex-direction:column; padding:52px 18px 76px; min-height:0;
   overflow-y:auto; position:relative;}
 .obj-standard{flex:1; display:flex; flex-direction:column; min-height:0; gap:14px;}
@@ -283,7 +284,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .canvas2d-wrap{position:absolute; inset:0; overflow:hidden; touch-action:none;}
 .canvas2d-pan{position:absolute; inset:0; transform-origin:center center; will-change:transform;}
 .canvas2d-img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
-  pointer-events:none;}
+  pointer-events:none; transition:opacity .25s ease;}
+.canvas2d-img.fading{opacity:0;}
 .canvas2d-wrap.no-image .canvas2d-img{display:none;}
 .canvas2d-wrap.no-image::before{content:""; position:absolute; inset:0;
   background:
@@ -369,20 +371,27 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    экран), поэтому здесь намеренно НЕТ своего position:relative —
    иначе привязка сломается и уедет на локальные координаты колонки. */
 .carpet-text-aligned{padding-bottom:64px;}
-.carpet-text-aligned .text-arrows-row{position:absolute; left:18px; right:58%; bottom:20px;}
+.carpet-text-aligned .text-arrows-row{position:absolute; left:5%; right:60.6%; bottom:20px;}
 
-/* --- «Ковёр»: текст слева (абзацами, без пагинации), картинка справа --- */
-.carpet-split{display:flex; height:100%; gap:14px;}
-.carpet-split .carpet-split-text{flex:1 1 42%; min-height:0; padding-right:4px;
+/* --- «Ковёр»: точная сетка колонок из макета Figma (в процентах от
+   1280px-канвы, пересчитано из пикселей — см. пояснение в чате):
+   5% пусто | 34.4% текст | 18.4% пусто (зазор) | 31.25% картинка | 10.9% пусто --- */
+.carpet-split{display:grid; height:100%;
+  grid-template-columns: 5% 34.4% 18.4% 31.25% 10.9%;}
+.carpet-split .carpet-split-text{grid-column:2; min-height:0;
   display:flex; flex-direction:column;}
-.carpet-split .carpet-split-stage{flex:1 1 58%; position:relative; min-width:0;
+.carpet-split .carpet-split-stage{grid-column:4; position:relative; min-width:0;
   max-height:none; min-height:0; height:100%;}
 .carpet-split .text-content{display:flex; flex-direction:column; justify-content:center;}
+/* Заголовок страницы для ковра начинается там же, где текст (5% от
+   ширины, а не от общего отступа .obj-body) — используем :has(), чтобы
+   не трогать заголовок на остальных страницах (там другие координаты). */
+.obj-body:has(.carpet-split) .page-title{margin-left:calc(5% - 18px);}
 
 /* --- «Человек»: сцена (видео/модель) + кнопка-переключатель слева,
    карусель одежды + независимый текст справа --- */
 .human-split{display:flex; height:100%; gap:14px;}
-.human-split-stage-col{flex:0 0 52%; display:flex; flex-direction:column; gap:14px; min-height:0;
+.human-split-stage-col{flex:0 0 40%; display:flex; flex-direction:column; gap:14px; min-height:0;
   padding-bottom:64px;}
 .human-split .human-split-stage{flex:1; position:relative; min-width:0; min-height:0;}
 /* Кнопка позиционируется от .obj-body (там position:relative, а сам
@@ -394,12 +403,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .human-video-stage.revealed{opacity:1; transform:scale(1);}
 .human-video{max-width:100%; max-height:100%; width:auto; height:100%;
   aspect-ratio:9/16; object-fit:cover; display:block; border-radius:4px;}
-.human-split-right{flex:1 1 48%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
+.human-split-right{flex:1 1 60%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
 /* Стрелки текста «о находке» — выровнены по той же Y, что и «Меню» и
    остальные стрелки на других страницах (тот же анкор — .obj-body,
    растянутый на весь экран, поэтому здесь тоже намеренно нет своего
    position:relative). */
-.human-text-aligned .text-arrows-row{position:absolute; left:50%; right:18px; bottom:20px;}
+.human-text-aligned .text-arrows-row{position:absolute; left:42%; right:18px; bottom:20px;}
 .human-carousel{flex:1 1 55%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
   background:transparent;}
 .human-about-text{flex:1 1 45%; min-height:0; padding-top:6px;}
@@ -441,9 +450,10 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   .obj-body{overflow-y:auto; -webkit-overflow-scrolling:touch;}
   .obj-standard{overflow-y:auto;}
 
-  .carpet-split, .human-split{flex-direction:column; height:auto; min-height:100%;}
-  .carpet-split .carpet-split-text{flex:0 0 auto; padding-right:0; padding-bottom:0;}
-  .carpet-split .carpet-split-stage{flex:0 0 auto; height:340px; min-height:280px;}
+  .carpet-split{display:flex; flex-direction:column; height:auto; min-height:100%;}
+  .human-split{flex-direction:column; height:auto; min-height:100%;}
+  .carpet-split .carpet-split-text{padding-bottom:0;}
+  .carpet-split .carpet-split-stage{height:340px; min-height:280px;}
   .carpet-text-aligned .text-arrows-row{position:static; padding-top:10px;}
   .human-split-stage-col{flex:0 0 auto; padding-bottom:0;}
   .human-toggle-btn{position:static; margin-top:10px;}
