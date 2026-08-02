@@ -65,7 +65,7 @@ export const CONTENT = {
       // от реальной карты автоматически (см. js/screens/map.js).
       heroLayout: {
         image: "assets/images/hero/panther.png",
-        left: 346.26, top: 463.26, width: 302.28, height: 302.28, rotate: -31.24
+        left: 406.26, top: 520.26, width: 302.28, height: 302.28, rotate: -31.24
       },
 
       // 3 фигурки листаются одной парой стрелок (не по отдельности) —
@@ -128,7 +128,7 @@ export const CONTENT = {
       hotspot: { x: 42.9, y: 55 },
       heroLayout: {
         image: "assets/images/hero/human.png",
-        left: 742, top: -83, width: 682, height: 1221, rotate: -11.05
+        left: 855, top: -35, width: 682, height: 1221, rotate: -11.05
       },
 
       // Карусель PNG элементов одежды (справа). Листается свайпом или
@@ -195,7 +195,7 @@ export const CONTENT = {
       hotspot: { x: 90, y: 62 },
       heroLayout: {
         image: "assets/images/hero/carpet.png",
-        left: -905, top: -502, width: 1228.73, height: 921.55, rotate: 22.91
+        left: -755, top: -302, width: 1228.73, height: 921.55, rotate: 22.91
       },
       // Единый текстовый блок справа (в макете — один блок, не два
       // стакнутых поля, как было раньше). Именно он переключается на
@@ -233,10 +233,10 @@ export const CONTENT = {
     // плейсхолдеры на реальные данные и положите QR-картинки по путям
     // ниже (все в одном визуальном стиле — как и договаривались).
     team: [
-      { qr: "assets/images/authors/person-1-qr.png", name: "Имя Фамилия", role: "Роль в проекте" },
-      { qr: "assets/images/authors/person-2-qr.png", name: "Имя Фамилия", role: "Роль в проекте" },
-      { qr: "assets/images/authors/person-3-qr.png", name: "Имя Фамилия", role: "Роль в проекте" },
-      { qr: "assets/images/authors/person-4-qr.png", name: "Имя Фамилия", role: "Роль в проекте" }
+      { qr: "assets/images/authors/AntvQR.png", name: "Анастасия Антонова", role: "Автор концепта<br>AI-creator" },
+      { qr: "assets/images/authors/SafrQR.png", name: "Михаил Сафронов", role: "Копирайтер" },
+      { qr: "assets/images/authors/ShanQR.png", name: "Марина Шейн", role: "Дизайнер" },
+      { qr: "assets/images/authors/UrvcQR.png", name: "Урвачев Роман", role: "Разработчик" }
     ]
   }
 
