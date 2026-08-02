@@ -1,44 +1,47 @@
 // ============================================================
-// Переиспользуемый текстовый блок с пагинацией (стрелки ‹ › +
-// квадратики-индикаторы страниц) — тот же принцип, что и в исходном
-// едином текстовом блоке объекта, но теперь можно поставить где
-// угодно (у каждой модели в шахматке, у каждого элемента одежды,
-// у ковра и т.д.), и у каждого экземпляра — своя независимая
-// пагинация.
+// Переиспользуемый текстовый блок — БЕЗ пагинации (стрелки/точки
+// убраны по вашей просьбе, листание оставлено только у карусели
+// элементов одежды). Все секции просто идут одна за другой, блок
+// прокручивается, если не помещается целиком.
 // ============================================================
-import { TextPager } from "./pagination.js";
 
 /**
  * @param {HTMLElement} container - куда вставить разметку
  * @param {Array<{h:string,t:string,location?:string}>} sections
  * @param {Object} [opts]
  * @param {string} [opts.extraClass] - дополнительный класс на обёртку (для стилизации под конкретное место)
- * @returns {TextPager} - обычный TextPager (setSections/go/destroy)
+ * @returns {{setSections:Function, destroy:Function}}
  */
 export function createTextBlock(container, sections, opts = {}) {
-  container.innerHTML = `
-    <div class="mini-text-block ${opts.extraClass || ""}">
-      <div class="text-slider">
-        <button class="text-arrow" data-prev aria-label="Предыдущий блок">‹</button>
-        <div class="text-content">
-          <h3 data-heading>—</h3>
-          <p data-body>—</p>
-          <p class="txt-location" data-location></p>
-        </div>
-        <button class="text-arrow" data-next aria-label="Следующий блок">›</button>
-      </div>
-      <div class="dots" data-dots></div>
-    </div>
-  `;
+  function render(list) {
+    container.innerHTML = `<div class="mini-text-block ${opts.extraClass || ""}"><div class="text-content"></div></div>`;
+    const contentEl = container.querySelector(".text-content");
+    (list || []).forEach((s) => {
+      const block = document.createElement("div");
+      block.className = "text-section";
 
-  const pager = new TextPager({
-    heading: container.querySelector("[data-heading]"),
-    body: container.querySelector("[data-body]"),
-    location: container.querySelector("[data-location]"),
-    dots: container.querySelector("[data-dots]"),
-    prevBtn: container.querySelector("[data-prev]"),
-    nextBtn: container.querySelector("[data-next]")
-  });
-  pager.setSections(sections);
-  return pager;
+      const h3 = document.createElement("h3");
+      h3.textContent = s.h;
+      block.appendChild(h3);
+
+      const p = document.createElement("p");
+      p.textContent = s.t;
+      block.appendChild(p);
+
+      if (s.location) {
+        const loc = document.createElement("p");
+        loc.className = "txt-location";
+        loc.textContent = s.location;
+        block.appendChild(loc);
+      }
+      contentEl.appendChild(block);
+    });
+  }
+
+  render(sections);
+
+  return {
+    setSections(newSections) { render(newSections); },
+    destroy() {}
+  };
 }

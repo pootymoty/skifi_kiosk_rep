@@ -98,8 +98,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .btn:hover{border-color:var(--accent-red); color:var(--accent-red);}
 .btn:active{background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .btn.ghost{background:var(--hero-line-20);}
-.btn-back{position:absolute; left:20px; bottom:20px; z-index:6;}
-.btn-back::before{content:"‹"; font-size:1.8rem; line-height:0;}
+.btn-back{position:absolute; left:50%; bottom:20px; transform:translateX(-50%); z-index:6;}
 
 /* ================= ЗАГРУЗКА ================= */
 #screen-boot{background:#000; align-items:center; justify-content:center;}
@@ -176,26 +175,18 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* --- объекты (пантера / человек / ковёр) — картинки с прозрачным фоном,
    позиция/размер/поворот 1:1 из Figma (heroLayout в content.js) --- */
 .hero-object{position:absolute; transform-origin:center center; cursor:pointer;
-  transition:opacity .3s ease, filter .3s ease;}
+  transition:opacity .3s ease;}
 .hero-object-img{width:100%; height:100%; display:block; pointer-events:none;
-  filter:drop-shadow(0 0 6px rgba(240,238,238,0)); transition:filter .3s ease;}
+  animation:objectBreathe 3s ease-in-out infinite;}
+@keyframes objectBreathe{
+  0%,100%{filter:drop-shadow(0 0 4px rgba(223,30,41,.35));}
+  50%{filter:drop-shadow(0 0 11px rgba(223,30,41,.65));}
+}
 .map-stage.selecting .hero-object:not(.selected){opacity:0;}
 .hero-object.selected .hero-object-img{
+  animation:none;
   filter:drop-shadow(0 0 7px rgba(240,238,238,0.45)) drop-shadow(0 0 14px rgba(240,238,238,.25));}
 .hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
-
-/* --- «бегущая» обводка ПО КОНТУРУ картинки (не по прямоугольнику) —
-   сам путь строится в map.js (трассировка альфа-канала, marching
-   squares, см. utils/contourTrace.js), тут только анимация и цвет.
-   Цвет — светлый (#F0EEEE, как обычная рамка кнопки) — раньше был
-   тёмный #0E0606, тот же, что фон карты, и был почти не виден. */
-.hero-outline{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
-.hero-outline path{
-  --outline-color:#F0EEEE;
-  fill:none; stroke:var(--outline-color); stroke-width:1.4;
-  vector-effect:non-scaling-stroke;
-  stroke-dasharray:6 5; animation:marchDash .5s linear infinite;}
-@keyframes marchDash{to{stroke-dashoffset:-11;}}
 
 /* --- метка объекта: круглая кнопка (запасной вариант, если у объекта
    нет heroLayout из Figma) --- */
@@ -344,12 +335,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .text-arrow:hover:not(:disabled){border-color:var(--accent-red); color:var(--accent-red);}
 .text-arrow:active:not(:disabled){background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .text-arrow:disabled{border-color:var(--hero-line-50); color:var(--hero-line-50); cursor:default;}
-.text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;
-  transition:opacity .22s ease; align-self:stretch;}
-.text-content.fading{opacity:0;}
+.text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;}
 .text-content h3{font-size:1.4rem; color:var(--gold-bright); margin-bottom:5px;
   letter-spacing:.08em; font-weight:400;}
 .text-content p{font-size:1.25rem; line-height:1.5; color:var(--text); margin:0; font-weight:300;}
+.text-section{margin-bottom:20px;}
+.text-section:last-child{margin-bottom:0;}
 .txt-location{margin-top:6px !important; font-size:1rem !important; letter-spacing:.04em;
   color:var(--text-dim); opacity:.55; font-style:italic;}
 .txt-location.hidden{display:none;}
@@ -383,8 +374,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* ================= ОСОБЫЕ РАСКЛАДКИ ОБЪЕКТОВ ================= */
 
-/* Переиспользуемый текстовый блок с пагинацией (см. js/utils/textBlock.js) —
-   использует те же .text-slider/.text-content/.dots, что и раньше. */
+/* Переиспользуемый текстовый блок (см. js/utils/textBlock.js) — БЕЗ
+   пагинации, все секции идут одна за другой, блок прокручивается. */
 .mini-text-block{display:flex; flex-direction:column; height:100%; min-height:0;}
 
 /* --- «Ковёр»: картинка в правой половине (с небольшим заходом за

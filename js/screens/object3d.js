@@ -148,10 +148,12 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
 
   const cached = getCachedModel(modelPath);
   if (cached) {
-    // Модель уже открывалась в этом сеансе — добавляем клон мгновенно,
-    // без обращения к сети (см. js/utils/preload.js → cacheModel).
+    // Модель уже открывалась в этом сеансе — клон уже пришёл с готовым
+    // масштабом/центровкой (см. ветку ниже — кэшируем ПОСЛЕ frameObject,
+    // а не до). Пересчитывать габариты заново НЕ нужно — именно
+    // повторный пересчёт и был причиной того, что модель "уменьшалась"
+    // при повторном заходе на страницу.
     pivot.add(cached);
-    frameObject(cached);
     revealNow();
   } else {
     // Первое открытие этой страницы — грузим по требованию, показывая
@@ -160,9 +162,9 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
     loader.load(
       modelPath,
       (gltf) => {
-        cacheModel(modelPath, gltf.scene); // чтобы следующее открытие было мгновенным
-        pivot.add(gltf.scene);
         frameObject(gltf.scene);
+        cacheModel(modelPath, gltf.scene); // кэшируем УЖЕ отмасштабированную модель — навсегда с этим же масштабом
+        pivot.add(gltf.scene);
         revealNow();
       },
       undefined,
@@ -474,17 +476,17 @@ function createGroupItem(el, { modelPath, icon, label }, THREE, loader) {
 
   const cached = getCachedModel(modelPath);
   if (cached) {
+    // Уже отмасштабирован заранее (см. ветку ниже) — пересчитывать не нужно.
     pivot.add(cached);
-    frameObject(cached);
     revealNow();
   } else {
     el.appendChild(spinner);
     loader.load(
       modelPath,
       (gltf) => {
-        cacheModel(modelPath, gltf.scene);
-        pivot.add(gltf.scene);
         frameObject(gltf.scene);
+        cacheModel(modelPath, gltf.scene); // кэшируем УЖЕ отмасштабированную модель
+        pivot.add(gltf.scene);
         revealNow();
       },
       undefined,
