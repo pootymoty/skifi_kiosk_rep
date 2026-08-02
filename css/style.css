@@ -128,13 +128,13 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* --- заголовок: 2 больших слова (Stalinist One) + 2 эйбрау-подписи
    (Geologica) — координаты 1:1 из Figma, просто выражены в % от
    ширины карты вместо фиксированных пикселей (см. px() в map.js) --- */
-.hero-word{position:absolute; margin:0; z-index:2; white-space:nowrap;
+.hero-word{position:absolute; margin:0; z-index:3; white-space:nowrap;
   font-family:var(--font-display); font-weight:400; text-transform:uppercase;
   font-size:calc(80 / 1280 * 100cqw); line-height:1.1; color:var(--hero-title-color);
   transition:opacity .3s ease;}
 .hero-word-1{left:calc(197 / 1280 * 100cqw); top:calc(272 / 1280 * 100cqw);}
 .hero-word-2{left:calc(555 / 1280 * 100cqw); top:calc(368 / 1280 * 100cqw);}
-.hero-eyebrow{position:absolute; z-index:2; font-family:var(--font-ui); font-weight:300;
+.hero-eyebrow{position:absolute; z-index:3; font-family:var(--font-ui); font-weight:300;
   font-size:calc(32 / 1280 * 100cqw); line-height:1.1; letter-spacing:.01em;
   color:var(--hero-eyebrow-color); transition:opacity .3s ease;}
 .hero-eyebrow-1{left:calc(638 / 1280 * 100cqw); top:calc(232 / 1280 * 100cqw);}
@@ -173,6 +173,28 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hero-object.selected .hero-object-img{
   filter:drop-shadow(0 0 16px var(--gold-bright)) drop-shadow(0 0 34px rgba(230,197,129,.7));}
 .hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
+
+/* --- «бегущая» пунктирная обводка вокруг картинок-объектов на карте.
+   Цвет сейчас — тот же #0E0606, что и рамка кнопки в состоянии
+   "нажатие" (как просили), НО это цвет фона карты — на чёрном фоне
+   такая обводка практически не видна. Пока оставил как есть, спросил
+   в чате, что имелось в виду — возможно, вы имели в виду светлую
+   рамку (#F0EEEE), она видна отлично. Поменять — одна строчка
+   (--marching-color ниже). */
+.hero-object::after{content:""; position:absolute; inset:0; pointer-events:none;
+  --marching-color:#0E0606;
+  background-image:
+    linear-gradient(90deg, var(--marching-color) 50%, transparent 50%),
+    linear-gradient(90deg, var(--marching-color) 50%, transparent 50%),
+    linear-gradient(0deg, var(--marching-color) 50%, transparent 50%),
+    linear-gradient(0deg, var(--marching-color) 50%, transparent 50%);
+  background-repeat:repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size:12px 2px, 12px 2px, 2px 12px, 2px 12px;
+  background-position:0 0, 0 100%, 0 0, 100% 0;
+  animation:marchingAnts .5s infinite linear;}
+@keyframes marchingAnts{
+  to{background-position:12px 0, -12px 100%, 0 -12px, 100% 12px;}
+}
 
 /* --- метка объекта: круглая кнопка (запасной вариант, если у объекта
    нет heroLayout из Figma) --- */
@@ -306,11 +328,18 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* --- text pagination --- */
 .text-panel{flex:1; min-height:0; display:flex; flex-direction:column; padding-top:12px;}
-.text-slider{flex:1; min-height:0; display:flex; align-items:stretch; gap:10px;}
-.text-arrow{flex:0 0 auto; width:32px; background:none; border:none; color:var(--gold);
-  font-size:2rem; cursor:pointer; opacity:.7;}
-.text-arrow:disabled{opacity:.15; cursor:default;}
-.text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;}
+.text-slider{flex:1; min-height:0; display:flex; align-items:center; gap:10px;}
+.text-arrow{flex:0 0 auto; box-sizing:border-box; width:44px; height:44px; border-radius:100px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--hero-line-20); border:2px solid var(--hero-text); color:var(--hero-text);
+  font-family:var(--font-ui); font-size:1.3rem; cursor:pointer;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;}
+.text-arrow:hover:not(:disabled){border-color:var(--hero-bg); color:var(--hero-bg);}
+.text-arrow:active:not(:disabled){background:var(--hero-press-bg); border-color:var(--hero-bg); color:var(--hero-bg);}
+.text-arrow:disabled{border-color:var(--hero-line-50); color:var(--hero-line-50); cursor:default;}
+.text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;
+  transition:opacity .22s ease; align-self:stretch;}
+.text-content.fading{opacity:0;}
 .text-content h3{font-size:1.4rem; color:var(--gold-bright); margin-bottom:5px;
   letter-spacing:.08em; font-weight:400;}
 .text-content p{font-size:1.25rem; line-height:1.5; color:var(--text); margin:0; font-weight:300;}

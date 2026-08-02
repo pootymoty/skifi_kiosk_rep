@@ -2,9 +2,15 @@
 // Пагинация текстовых блоков объекта (ТЗ п.10).
 // Индикатор страниц ▰ ▱ ▱ — не кликабелен, только отображает прогресс.
 // Листать можно и стрелками, и свайпом по самому тексту.
+//
+// Если дольше IDLE_RESET_MS не было ни одного пролистывания — блок сам
+// плавно возвращается на первую страницу (та же идея, что и сброс
+// положения 3D-моделей после паузы).
 // ============================================================
 
 const SWIPE_THRESHOLD = 40; // px, минимальное горизонтальное перемещение, чтобы засчитать как свайп
+const IDLE_RESET_MS = 20000;
+const FADE_MS = 220; // должно совпадать с transition у .text-content в css/style.css
 
 export class TextPager {
   /**
@@ -25,6 +31,9 @@ export class TextPager {
     this.nextBtn = refs.nextBtn;
     this.sections = [];
     this.page = 0;
+    this.textContentEl = this.body.parentElement; // .text-content — для fade-перехода
+    this._idleTimer = null;
+    this._fadeTimer = null;
 
     this._onPrev = () => this.go(this.page - 1);
     this._onNext = () => this.go(this.page + 1);
@@ -32,7 +41,7 @@ export class TextPager {
     this.nextBtn.addEventListener("pointerdown", this._onNext);
 
     // --- свайп по самому тексту (не только клик по стрелкам) ---
-    this.swipeArea = refs.swipeArea || this.body.parentElement;
+    this.swipeArea = refs.swipeArea || this.textContentEl;
     let dragging = false, startX = 0, startY = 0, deltaX = 0;
     this._onPointerDown = (e) => { dragging = true; startX = e.clientX; startY = e.clientY; deltaX = 0; };
     this._onPointerMove = (e) => { if (dragging) deltaX = e.clientX - startX; };
@@ -58,12 +67,35 @@ export class TextPager {
     this.sections = sections || [];
     this.page = 0;
     this._render();
+    this._scheduleIdleReset();
   }
 
-  go(page) {
+  go(page, opts = {}) {
     if (page < 0 || page > this.sections.length - 1) return;
+    if (page === this.page && !opts.silent) { this._scheduleIdleReset(); return; }
     this.page = page;
-    this._render();
+    this._renderWithFade();
+    if (!opts.silent) this._scheduleIdleReset();
+  }
+
+  // Плавный переход между страницами — используется и для обычного
+  // листания, и для автоматического возврата на первую страницу.
+  _renderWithFade() {
+    this.textContentEl.classList.add("fading");
+    clearTimeout(this._fadeTimer);
+    this._fadeTimer = setTimeout(() => {
+      this._render();
+      this.textContentEl.classList.remove("fading");
+    }, FADE_MS);
+  }
+
+  _scheduleIdleReset() {
+    clearTimeout(this._idleTimer);
+    if (this.sections.length <= 1) return; // один экран — сбрасывать нечего
+    this._idleTimer = setTimeout(() => {
+      if (this.page !== 0) this.go(0, { silent: true });
+      this._scheduleIdleReset(); // и продолжаем отсчитывать заново
+    }, IDLE_RESET_MS);
   }
 
   _render() {
@@ -92,6 +124,8 @@ export class TextPager {
   }
 
   destroy() {
+    clearTimeout(this._idleTimer);
+    clearTimeout(this._fadeTimer);
     this.prevBtn.removeEventListener("pointerdown", this._onPrev);
     this.nextBtn.removeEventListener("pointerdown", this._onNext);
     this.swipeArea.removeEventListener("pointerdown", this._onPointerDown);
