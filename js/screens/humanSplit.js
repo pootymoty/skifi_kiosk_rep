@@ -1,12 +1,14 @@
 // ============================================================
-// Раскладка экрана «Человек»: справа — видео/гифка (формат 9:16,
-// зациклена — сам ролик уже содержит поворот и возврат в исходное
-// положение, код просто зацикленно проигрывает его), слева —
-// текст про элемент одежды / карусель одежды / текст о находке
-// (см. js/screens/humanPanel.js).
+// Раскладка экрана «Человек» (обновлено по новому макету Figma):
+//   слева  — сцена (3D-модель ИЛИ видео, переключается кнопкой снизу)
+//   справа — карусель элементов одежды + независимый текст
+//            (см. js/screens/humanPanel.js)
 //
-// Если data.video не задан — используется прежнее поведение (3D-модель
-// через data.model), на случай если вернётесь к модели позже.
+// Кнопка снизу слева — переключатель. Показывает НАЗВАНИЕ ТОГО, что
+// откроется по нажатию (а не того, что показано сейчас): пока видна
+// модель — кнопка называется "ии визуализация" (нажмёшь — включится
+// видео); пока видно видео — кнопка называется "3D модель" (нажмёшь —
+// вернётся модель).
 // ============================================================
 import { mountModelViewer } from "./object3d.js";
 import { initHumanPanel } from "./humanPanel.js";
@@ -14,27 +16,52 @@ import { initHumanPanel } from "./humanPanel.js";
 export async function initHumanSplit(container, data) {
   container.innerHTML = `
     <div class="human-split">
-      <div class="human-split-left"></div>
-      <div class="human-split-stage${data.video ? " human-video-stage" : " stage-3d"}"></div>
+      <div class="human-split-stage-col">
+        <div class="human-split-stage"></div>
+        <button class="btn ghost wide human-toggle-btn"></button>
+      </div>
+      <div class="human-split-right"></div>
     </div>
   `;
 
-  const leftEl = container.querySelector(".human-split-left");
   const stageEl = container.querySelector(".human-split-stage");
+  const rightEl = container.querySelector(".human-split-right");
+  const toggleBtn = container.querySelector(".human-toggle-btn");
 
-  const panel = initHumanPanel(leftEl, data);
+  const panel = initHumanPanel(rightEl, data);
 
-  let viewer;
-  if (data.video) {
-    viewer = mountHumanVideo(stageEl, data.video);
-  } else {
-    viewer = await mountModelViewer(stageEl, { modelPath: data.model, icon: data.icon });
+  // По умолчанию показываем 3D-модель (если она есть), видео — по кнопке.
+  let showingVideo = false;
+  let stageController = null;
+
+  async function mountStage() {
+    if (stageController) { stageController.destroy(); stageController = null; }
+    stageEl.innerHTML = "";
+    stageEl.classList.remove("revealed", "human-video-stage", "stage-3d");
+
+    if (showingVideo && data.video) {
+      stageEl.classList.add("human-video-stage");
+      stageController = mountHumanVideo(stageEl, data.video);
+    } else {
+      stageEl.classList.add("stage-3d");
+      stageController = await mountModelViewer(stageEl, { modelPath: data.model, icon: data.icon });
+    }
+    toggleBtn.textContent = showingVideo ? "3D модель" : "ии визуализация";
   }
+
+  const hasBoth = !!(data.video && data.model);
+  toggleBtn.style.display = hasBoth ? "" : "none"; // переключать нечего, если чего-то одного нет
+  toggleBtn.addEventListener("pointerdown", () => {
+    showingVideo = !showingVideo;
+    mountStage();
+  });
+
+  await mountStage();
 
   return {
     destroy() {
       panel.destroy();
-      viewer.destroy();
+      if (stageController) stageController.destroy();
     }
   };
 }

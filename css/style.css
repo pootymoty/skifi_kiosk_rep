@@ -30,6 +30,7 @@
   --hero-line-50:rgba(240,238,238,0.5);
   --hero-line-20:rgba(240,238,238,0.2);
   --hero-press-bg:rgba(255,248,244,0.8);
+  --accent-red:#DF1E29;
 
   --gold:#F0EEEE;
   --gold-bright:rgba(243,232,227,0.8);
@@ -94,8 +95,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   padding:12px 24px; cursor:pointer;
   display:inline-flex; align-items:center; gap:8px;
   transition:background .2s ease, border-color .2s ease, color .2s ease;}
-.btn:hover{border-color:var(--hero-bg); color:var(--hero-bg);}
-.btn:active{background:var(--hero-press-bg); border-color:var(--hero-bg); color:var(--hero-bg);}
+.btn:hover{border-color:var(--accent-red); color:var(--accent-red);}
+.btn:active{background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .btn.ghost{background:var(--hero-line-20);}
 .btn-back{position:absolute; left:20px; bottom:20px; z-index:6;}
 .btn-back::before{content:"‹"; font-size:1.8rem; line-height:0;}
@@ -166,8 +167,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   font-family:var(--font-ui); font-weight:300; font-size:calc(24/1280*100cqw);
   letter-spacing:.01em; text-transform:uppercase; color:var(--hero-text); cursor:pointer;
   transition:background .2s ease, border-color .2s ease, color .2s ease;}
-.pill-btn:hover{border-color:var(--hero-bg); color:var(--hero-bg);}
-.pill-btn:active{background:var(--hero-press-bg); border-color:var(--hero-bg); color:var(--hero-bg);}
+.pill-btn:hover{border-color:var(--accent-red); color:var(--accent-red);}
+.pill-btn:active{background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .pill-btn:disabled{border-color:var(--hero-line-50); color:var(--hero-line-50); cursor:default;}
 .hero-btn-restart{left:calc(425/1280*100cqw); top:calc(649/1280*100cqw);}
 .hero-btn-authors{left:calc(655/1280*100cqw); top:calc(649/1280*100cqw);}
@@ -180,18 +181,17 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   filter:drop-shadow(0 0 6px rgba(240,238,238,0)); transition:filter .3s ease;}
 .map-stage.selecting .hero-object:not(.selected){opacity:0;}
 .hero-object.selected .hero-object-img{
-  filter:drop-shadow(0 0 16px rgba(240,238,238,0.9)) drop-shadow(0 0 34px rgba(240,238,238,.6));}
+  filter:drop-shadow(0 0 7px rgba(240,238,238,0.45)) drop-shadow(0 0 14px rgba(240,238,238,.25));}
 .hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
 
 /* --- «бегущая» обводка ПО КОНТУРУ картинки (не по прямоугольнику) —
    сам путь строится в map.js (трассировка альфа-канала, marching
    squares, см. utils/contourTrace.js), тут только анимация и цвет.
-   Цвет — тот же #0E0606, что и рамка кнопки в состоянии "нажатие" (как
-   просили) — учтите, это цвет фона карты, на чёрном фоне обводка
-   практически не видна. Поменять — одна переменная ниже. */
+   Цвет — светлый (#F0EEEE, как обычная рамка кнопки) — раньше был
+   тёмный #0E0606, тот же, что фон карты, и был почти не виден. */
 .hero-outline{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
 .hero-outline path{
-  --outline-color:#0E0606;
+  --outline-color:#F0EEEE;
   fill:none; stroke:var(--outline-color); stroke-width:1.4;
   vector-effect:non-scaling-stroke;
   stroke-dasharray:6 5; animation:marchDash .5s linear infinite;}
@@ -217,8 +217,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   box-shadow:0 6px 18px rgba(0,0,0,0.5);
   display:flex; align-items:center; justify-content:center; font-size:2.4rem; color:var(--hero-text);
   transition:transform .3s cubic-bezier(.3,.7,.4,1.4);}
-.hotspot.selected .glyph{transform:scale(1.12); border-color:var(--hero-bg);
-  background:var(--hero-press-bg); color:var(--hero-bg);
+.hotspot.selected .glyph{transform:scale(1.12); border-color:var(--accent-red);
+  background:var(--accent-red); color:var(--hero-bg);
   box-shadow:0 6px 24px rgba(0,0,0,0.6);}
 .hotspot .label{position:absolute; top:78px; left:50%; transform:translateX(-50%);
   white-space:nowrap; font-family:var(--font-ui); font-size:1.25rem; letter-spacing:.12em;
@@ -341,8 +341,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   background:var(--hero-line-20); border:2px solid var(--hero-text); color:var(--hero-text);
   font-family:var(--font-ui); font-size:1.3rem; cursor:pointer;
   transition:background .2s ease, border-color .2s ease, color .2s ease;}
-.text-arrow:hover:not(:disabled){border-color:var(--hero-bg); color:var(--hero-bg);}
-.text-arrow:active:not(:disabled){background:var(--hero-press-bg); border-color:var(--hero-bg); color:var(--hero-bg);}
+.text-arrow:hover:not(:disabled){border-color:var(--accent-red); color:var(--accent-red);}
+.text-arrow:active:not(:disabled){background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .text-arrow:disabled{border-color:var(--hero-line-50); color:var(--hero-line-50); cursor:default;}
 .text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;
   transition:opacity .22s ease; align-self:stretch;}
@@ -400,22 +400,21 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .carpet-split .carpet-split-stage{flex:1 1 72%; position:relative; min-width:0;
   max-height:none; min-height:0; height:100%;}
 
-/* --- «Человек»: модель справа (половина экрана), слева — карусель /
-   текст текущего элемента одежды / текст о находке --- */
+/* --- «Человек»: сцена (видео/модель) + кнопка-переключатель слева,
+   карусель одежды + независимый текст справа --- */
 .human-split{display:flex; height:100%; gap:14px;}
-.human-split .human-split-left{flex:0 0 38%; display:flex; flex-direction:column;
-  min-height:0; gap:16px;}
-.human-split .human-split-stage{flex:1 1 62%; position:relative; min-width:0;
-  max-height:none; min-height:0; height:100%;}
+.human-split-stage-col{flex:0 0 40%; display:flex; flex-direction:column; gap:14px; min-height:0;}
+.human-split .human-split-stage{flex:1; position:relative; min-width:0; min-height:0;}
+.human-toggle-btn{flex:0 0 auto; align-self:flex-start; width:auto;}
 .human-video-stage{display:flex; align-items:center; justify-content:center;
   opacity:0; transform:scale(.93); transition:opacity .42s ease, transform .42s cubic-bezier(.2,.8,.3,1);}
 .human-video-stage.revealed{opacity:1; transform:scale(1);}
 .human-video{max-width:100%; max-height:100%; width:auto; height:100%;
   aspect-ratio:9/16; object-fit:cover; display:block; border-radius:4px;}
-.human-carousel{flex:1 1 50%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
+.human-split-right{flex:1 1 60%; display:flex; flex-direction:column; min-height:0; gap:16px;}
+.human-carousel{flex:1 1 55%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
   background:transparent;}
-.human-item-text{flex:1 1 25%; min-height:0;}
-.human-about-text{flex:1 1 25%; min-height:0; padding-top:6px;}
+.human-about-text{flex:1 1 45%; min-height:0; padding-top:6px;}
 .carousel-track{position:absolute; inset:0; display:flex; transition:transform .5s cubic-bezier(.4,0,.2,1);
   touch-action:pan-y;}
 .carousel-slide{flex:0 0 100%; position:relative; display:flex; align-items:center; justify-content:center;}
@@ -466,10 +465,11 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   .carpet-split, .human-split{flex-direction:column; height:auto; min-height:100%;}
   .carpet-split .carpet-split-text{flex:0 0 auto; padding-right:0;}
   .carpet-split .carpet-split-stage{flex:0 0 auto; height:340px; min-height:280px;}
-  .human-split .human-split-left{flex:0 0 auto;}
+  .human-split-stage-col{flex:0 0 auto;}
   .human-split .human-split-stage{flex:0 0 auto; height:280px; min-height:240px;}
+  .human-split-right{flex:0 0 auto;}
   .human-carousel{flex:0 0 auto; height:200px; min-height:200px;}
-  .human-item-text, .human-about-text{flex:0 0 auto; min-height:120px;}
+  .human-about-text{flex:0 0 auto; min-height:120px;}
 
   .beast-grid{display:flex; flex-direction:column; height:auto; min-height:100%;}
   .beast-cell{min-height:0;}
