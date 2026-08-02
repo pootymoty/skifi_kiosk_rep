@@ -13,20 +13,16 @@
 }
 
 :root{
-  --bg:#000000;
-  --bg-2:#000000;
-  --stone:#000000;
-  --stone-light:#1a1a1a;
-  --bronze:#8c6a3f;
-  --gold:#c9a15a;
-  --gold-bright:#e6c581;
-  --parchment:#e9dcbe;
-  --text:#efe6d0;
-  --text-dim:#a99878;
-  --line:rgba(255,255,255,0.08);
-  --danger:#c96a4a;
+  --bg:#0E0606;
+  --bg-2:#0E0606;
+  --line:rgba(240,238,238,0.18);
+  --danger:#c96a4a; /* только служебная пометка "файл не найден", не часть дизайна */
   --shadow:0 20px 60px rgba(0,0,0,0.7);
-  /* --- дизайн-система из Figma (экран карты, пока только он) --- */
+
+  /* --- дизайн-система из Figma — единственная используемая на сайте.
+     Старые названия переменных (--gold/--parchment/--text и т.п.)
+     оставлены только чтобы не переписывать каждое правило по отдельности —
+     но теперь указывают строго на ваши цвета, никакой отсебятины. --- */
   --hero-bg:#0E0606;
   --hero-text:#F0EEEE;
   --hero-title-color:rgba(243,232,227,0.8);
@@ -34,6 +30,16 @@
   --hero-line-50:rgba(240,238,238,0.5);
   --hero-line-20:rgba(240,238,238,0.2);
   --hero-press-bg:rgba(255,248,244,0.8);
+
+  --gold:#F0EEEE;
+  --gold-bright:rgba(243,232,227,0.8);
+  --bronze:#CBC1BD;
+  --parchment:#F0EEEE;
+  --text:#F0EEEE;
+  --text-dim:#CBC1BD;
+  --stone:rgba(240,238,238,0.2);
+  --stone-light:rgba(240,238,238,0.2);
+
   --font-display:"Stalinist One", Georgia, serif;
   --font-ui:"Geologica", 'Trebuchet MS', sans-serif;
 
@@ -55,7 +61,7 @@
    вьюпорта, а не держит его на фиксированном числе пикселей всегда. */
 html{font-size:clamp(15px, 1vw, 24px);}
 html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000;
-  font-family:Georgia,'Times New Roman',serif; color:var(--text); touch-action:none;}
+  font-family:var(--font-ui); color:var(--text); touch-action:none;}
 #app{position:relative; width:100vw; overflow:hidden;
   height:100vh;                          /* запасной вариант для старых браузеров */
   height:100dvh;                         /* современный "настоящий" viewport-height */
@@ -68,7 +74,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; backgro
 .screen.active{opacity:1; pointer-events:auto; transform:scale(1); filter:blur(0);}
 
 /* ---------- typography ---------- */
-.eyebrow{font-family:'Trebuchet MS',sans-serif; font-size:1.15rem; letter-spacing:.32em;
+.eyebrow{font-family:var(--font-ui); font-size:1.15rem; letter-spacing:.32em;
   text-transform:uppercase; color:var(--gold); opacity:.85;}
 h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03em;}
 
@@ -82,19 +88,22 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .mini-logo-page{font-family:var(--font-ui); font-size:12px; font-weight:400;
   color:rgba(243,232,227,0.8); margin-top:2px;}
 
-.btn{font-family:'Trebuchet MS',sans-serif; font-size:1.3rem; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--text); background:linear-gradient(180deg,var(--stone-light),var(--stone));
-  border:1px solid var(--line); border-radius:3px; padding:12px 20px; cursor:pointer;
-  display:inline-flex; align-items:center; gap:8px; transition:border-color .2s, transform .15s;}
-.btn:active{transform:scale(0.96);}
-.btn.ghost{background:transparent;}
+.btn{box-sizing:border-box; font-family:var(--font-ui); font-weight:300; font-size:1.3rem;
+  letter-spacing:.01em; text-transform:uppercase; color:var(--hero-text);
+  background:var(--hero-line-20); border:2px solid var(--hero-text); border-radius:100px;
+  padding:12px 24px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;}
+.btn:hover{border-color:var(--hero-bg); color:var(--hero-bg);}
+.btn:active{background:var(--hero-press-bg); border-color:var(--hero-bg); color:var(--hero-bg);}
+.btn.ghost{background:var(--hero-line-20);}
 .btn-back{position:absolute; left:20px; bottom:20px; z-index:6;}
-.btn-back::before{content:"‹"; font-size:1.8rem; line-height:0; color:var(--gold);}
+.btn-back::before{content:"‹"; font-size:1.8rem; line-height:0;}
 
 /* ================= ЗАГРУЗКА ================= */
 #screen-boot{background:#000; align-items:center; justify-content:center;}
 .boot-loading{display:flex; flex-direction:column; align-items:center; gap:22px;}
-.boot-eyebrow{font-family:'Trebuchet MS',sans-serif; font-size:1.2rem; letter-spacing:.3em;
+.boot-eyebrow{font-family:var(--font-ui); font-size:1.2rem; letter-spacing:.3em;
   text-transform:uppercase; color:var(--text-dim);}
 .boot-dots{display:flex; gap:8px;}
 .boot-dots span{width:8px; height:8px; border-radius:50%; background:var(--gold);
@@ -168,10 +177,10 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hero-object{position:absolute; transform-origin:center center; cursor:pointer;
   transition:opacity .3s ease, filter .3s ease;}
 .hero-object-img{width:100%; height:100%; display:block; pointer-events:none;
-  filter:drop-shadow(0 0 6px rgba(230,197,129,0)); transition:filter .3s ease;}
+  filter:drop-shadow(0 0 6px rgba(240,238,238,0)); transition:filter .3s ease;}
 .map-stage.selecting .hero-object:not(.selected){opacity:0;}
 .hero-object.selected .hero-object-img{
-  filter:drop-shadow(0 0 16px var(--gold-bright)) drop-shadow(0 0 34px rgba(230,197,129,.7));}
+  filter:drop-shadow(0 0 16px rgba(240,238,238,0.9)) drop-shadow(0 0 34px rgba(240,238,238,.6));}
 .hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
 
 /* --- «бегущая» обводка ПО КОНТУРУ картинки (не по прямоугольнику) —
@@ -204,14 +213,15 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hotspot .ring2{position:absolute; inset:14px; border-radius:50%; border:1px solid var(--gold-bright);
   opacity:.35;}
 .hotspot .glyph{position:relative; width:64px; height:64px; border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--bronze) 60%, #5c421f 100%);
-  box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.35);
-  display:flex; align-items:center; justify-content:center; font-size:2.4rem; color:#1c1408;
+  background:rgba(240,238,238,0.2); border:2px solid var(--hero-text);
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  display:flex; align-items:center; justify-content:center; font-size:2.4rem; color:var(--hero-text);
   transition:transform .3s cubic-bezier(.3,.7,.4,1.4);}
-.hotspot.selected .glyph{transform:scale(1.12);
-  box-shadow:0 6px 24px rgba(0,0,0,0.6), 0 0 24px rgba(230,197,129,.8), inset 0 0 10px rgba(0,0,0,0.35);}
+.hotspot.selected .glyph{transform:scale(1.12); border-color:var(--hero-bg);
+  background:var(--hero-press-bg); color:var(--hero-bg);
+  box-shadow:0 6px 24px rgba(0,0,0,0.6);}
 .hotspot .label{position:absolute; top:78px; left:50%; transform:translateX(-50%);
-  white-space:nowrap; font-family:'Trebuchet MS',sans-serif; font-size:1.25rem; letter-spacing:.12em;
+  white-space:nowrap; font-family:var(--font-ui); font-size:1.25rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--parchment); text-shadow:0 2px 6px rgba(0,0,0,0.8);}
 @keyframes pulse{0%,100%{transform:scale(1); opacity:.55;} 50%{transform:scale(1.12); opacity:.15;}}
 
@@ -256,10 +266,6 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   display:flex; align-items:center; justify-content:center;
   opacity:0; transform:scale(.9); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.3,1);}
 .stage-3d-cell.revealed{opacity:1; transform:scale(1);}
-.stage-3d-cell .cell-label{position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
-  font-family:'Trebuchet MS',sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--parchment); background:rgba(0,0,0,0.45); padding:3px 9px; border-radius:10px; z-index:2;
-  white-space:nowrap;}
 .stage-3d-cell .asset-missing-note{font-size:9px; padding:3px 6px;}
 
 /* --- индикатор загрузки модели/картинки при первом (ленивом) открытии --- */
@@ -272,12 +278,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
   border:1px solid var(--gold); box-shadow:0 10px 30px rgba(0,0,0,0.55);}
 .model-face .icon{font-size:4.6rem;}
-.model-face .tag{font-family:'Trebuchet MS',sans-serif; font-size:10px; letter-spacing:.15em;
-  text-transform:uppercase; color:#2a1d0c; opacity:.75;}
-.model-face.front{background:linear-gradient(160deg,var(--gold-bright),var(--bronze) 65%,#4a3216);}
-.model-face.back{background:linear-gradient(160deg,#6b5024,var(--bronze) 55%,#3a2712); transform:rotateY(180deg);}
+.model-face .tag{font-family:var(--font-ui); font-size:10px; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--text); opacity:.75;}
+.model-face.front{background:linear-gradient(160deg, rgba(240,238,238,0.35), rgba(203,193,189,0.15));}
+.model-face.back{background:linear-gradient(160deg, rgba(203,193,189,0.25), rgba(240,238,238,0.1)); transform:rotateY(180deg);}
 .stage-hint-icon{position:absolute; top:10px; right:12px; font-size:1.15rem; color:var(--text-dim);
-  font-family:'Trebuchet MS',sans-serif; letter-spacing:.08em; z-index:2;}
+  font-family:var(--font-ui); letter-spacing:.08em; z-index:2;}
 
 /* --- 2D stage (carpet) --- */
 .stage-2d{position:relative; flex:1 1 auto; min-height:340px; border-radius:0; overflow:hidden;
@@ -291,8 +297,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .canvas2d-wrap.no-image .canvas2d-img{display:none;}
 .canvas2d-wrap.no-image::before{content:""; position:absolute; inset:0;
   background:
-    repeating-linear-gradient(45deg, #7a4f22 0 18px, #8a5d2c 18px 36px),
-    repeating-linear-gradient(-45deg, rgba(0,0,0,0.12) 0 10px, transparent 10px 20px);
+    repeating-linear-gradient(45deg, rgba(240,238,238,0.08) 0 18px, rgba(240,238,238,0.14) 18px 36px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0 10px, transparent 10px 20px);
   background-blend-mode:multiply;}
 .canvas2d-wrap.no-image::after{content:""; position:absolute; inset:12%; border:6px double var(--gold);
   opacity:.6;}
@@ -306,7 +312,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hole-detail-overlay.hidden{display:none;}
 .hole-detail-overlay.show{opacity:1;}
 .hole-detail-img{max-width:86%; max-height:76%; object-fit:contain;}
-.hole-detail-caption{font-family:'Trebuchet MS',sans-serif; font-size:1.3rem; letter-spacing:.14em;
+.hole-detail-caption{font-family:var(--font-ui); font-size:1.3rem; letter-spacing:.14em;
   text-transform:uppercase; color:var(--gold-bright); text-align:center;}
 
 /* --- метка повреждённого участка ковра («дырка») --- */
@@ -317,12 +323,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hole-marker .ring{position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--gold-bright);
   opacity:.7; animation:pulse 2.4s ease-in-out infinite;}
 .hole-marker .ring2{position:absolute; inset:11px; border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--bronze) 70%);
-  box-shadow:0 0 14px rgba(230,197,129,0.7);}
+  background:rgba(240,238,238,0.5); border:1px solid var(--hero-text);
+  box-shadow:0 0 14px rgba(240,238,238,0.5);}
 
 /* --- missing-asset badge (both stages) --- */
 .asset-missing-note{position:absolute; left:12px; bottom:12px; z-index:4;
-  font-family:'Trebuchet MS',sans-serif; font-size:10.5px; letter-spacing:.05em;
+  font-family:var(--font-ui); font-size:10.5px; letter-spacing:.05em;
   color:var(--parchment); background:rgba(120,58,38,0.85); border:1px solid var(--danger);
   border-radius:3px; padding:5px 9px; max-width:calc(100% - 24px);}
 .asset-missing-note.hidden{display:none;}
@@ -366,10 +372,10 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .qr-img{width:100%; height:100%; object-fit:contain;}
 .qr-box.no-image .qr-img{display:none;}
 .qr-box.no-image{background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15); border-radius:6px;}
-.qr-box.no-image::before{content:"QR"; font-family:'Trebuchet MS',sans-serif; font-size:12px;
+.qr-box.no-image::before{content:"QR"; font-family:var(--font-ui); font-size:12px;
   letter-spacing:.15em; color:var(--text-dim);}
 .author-name{font-size:1.4rem; color:var(--parchment); margin-top:2px; font-weight:400;}
-.author-role{font-family:'Trebuchet MS',sans-serif; font-size:1.1rem; letter-spacing:.1em;
+.author-role{font-family:var(--font-ui); font-size:1.1rem; letter-spacing:.1em;
   color:var(--text-dim); text-transform:uppercase;}
 
 ::-webkit-scrollbar{width:5px;}
@@ -415,9 +421,6 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .carousel-slide{flex:0 0 100%; position:relative; display:flex; align-items:center; justify-content:center;}
 .carousel-slide img{max-width:94%; max-height:88%; object-fit:contain; pointer-events:none;}
 .carousel-slide.no-image img{display:none;}
-.carousel-caption{position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
-  font-family:'Trebuchet MS',sans-serif; font-size:1.05rem; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--parchment); opacity:.7;}
 .carousel-dots{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:2;}
 .carousel-dots .dot{width:6px; height:6px; border-radius:50%; transform:none;
   background:rgba(255,255,255,0.15); border:none; cursor:pointer;}
@@ -448,10 +451,6 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   display:flex; align-items:center; justify-content:center;
   opacity:0; transform:scale(.9); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.3,1);}
 .beast-model.revealed{opacity:1; transform:scale(1);}
-.beast-model .cell-label{position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
-  font-family:'Trebuchet MS',sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--parchment); background:rgba(0,0,0,0.45); padding:3px 9px; border-radius:10px; z-index:2;
-  white-space:nowrap;}
 
 /* ================= АДАПТИВНОСТЬ: ТЕЛЕФОН / ТЕСНАЯ ВЫСОТА =================
    Основной экран (интерактивный стол/проектор) — просторный, эти

@@ -29,6 +29,7 @@
 import { getCachedModel, cacheModel } from "../utils/preload.js";
 
 const IDLE_RESET_MS = 10000;
+const FRAME_TARGET_SIZE = 2.7; // было 2.2 — модели теперь заметно крупнее при открытии, и везде одинаково
 
 export async function initObjectStage3D(container, opts) {
   container.innerHTML = "";
@@ -86,13 +87,6 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   badge.className = "asset-missing-note hidden";
   mountEl.appendChild(badge);
 
-  if (label) {
-    const labelEl = document.createElement("div");
-    labelEl.className = "cell-label";
-    labelEl.textContent = label;
-    mountEl.appendChild(labelEl);
-  }
-
   // lite-режим (несколько 3D-сцен на одном экране, напр. шахматка
   // зверей) — заметно снижает нагрузку на GPU: без сглаживания,
   // ниже предел pixel ratio, меньше источников света, кадры реже.
@@ -122,13 +116,20 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   scene.add(pivot);
 
   function frameObject(object3d) {
+    // Обязательно обновляем мировые матрицы ПЕРЕД замером габаритов —
+    // без этого при первой же вставке в сцену Box3 иногда мерил объект
+    // ДО того, как его трансформация до конца "устаканилась", и на
+    // разных заходах (свежая загрузка / клон из кэша) масштаб мог
+    // получаться слегка разным. Теперь замер всегда детерминированный —
+    // масштаб строго одинаковый при каждом открытии страницы.
+    object3d.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(object3d);
     const size = new THREE.Vector3();
     box.getSize(size);
     const center = new THREE.Vector3();
     box.getCenter(center);
     const maxDim = Math.max(size.x, size.y, size.z) || 1;
-    const scale = 2.2 / maxDim;
+    const scale = FRAME_TARGET_SIZE / maxDim;
     object3d.scale.setScalar(scale);
     object3d.position.sub(center.multiplyScalar(scale));
   }
@@ -170,7 +171,7 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
         badge.textContent = "Файл не найден: " + modelPath;
         badge.classList.remove("hidden");
         const geo = new THREE.IcosahedronGeometry(1, 1);
-        const mat = new THREE.MeshStandardMaterial({ color: 0xc9a15a, metalness: 0.35, roughness: 0.4 });
+        const mat = new THREE.MeshStandardMaterial({ color: 0xe8e2da, metalness: 0.35, roughness: 0.4 });
         pivot.add(new THREE.Mesh(geo, mat));
         revealNow();
       }
@@ -416,12 +417,6 @@ function createGroupItem(el, { modelPath, icon, label }, THREE, loader) {
   const badge = document.createElement("div");
   badge.className = "asset-missing-note hidden";
   el.appendChild(badge);
-  if (label) {
-    const labelEl = document.createElement("div");
-    labelEl.className = "cell-label";
-    labelEl.textContent = label;
-    el.appendChild(labelEl);
-  }
   const spinner = document.createElement("div");
   spinner.className = "stage-spinner";
 
@@ -437,13 +432,20 @@ function createGroupItem(el, { modelPath, icon, label }, THREE, loader) {
   scene.add(pivot);
 
   function frameObject(object3d) {
+    // Обязательно обновляем мировые матрицы ПЕРЕД замером габаритов —
+    // без этого при первой же вставке в сцену Box3 иногда мерил объект
+    // ДО того, как его трансформация до конца "устаканилась", и на
+    // разных заходах (свежая загрузка / клон из кэша) масштаб мог
+    // получаться слегка разным. Теперь замер всегда детерминированный —
+    // масштаб строго одинаковый при каждом открытии страницы.
+    object3d.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(object3d);
     const size = new THREE.Vector3();
     box.getSize(size);
     const center = new THREE.Vector3();
     box.getCenter(center);
     const maxDim = Math.max(size.x, size.y, size.z) || 1;
-    const scale = 2.2 / maxDim;
+    const scale = FRAME_TARGET_SIZE / maxDim;
     object3d.scale.setScalar(scale);
     object3d.position.sub(center.multiplyScalar(scale));
   }
@@ -491,7 +493,7 @@ function createGroupItem(el, { modelPath, icon, label }, THREE, loader) {
         badge.textContent = "Файл не найден: " + modelPath;
         badge.classList.remove("hidden");
         const geo = new THREE.IcosahedronGeometry(1, 1);
-        const mat = new THREE.MeshStandardMaterial({ color: 0xc9a15a, metalness: 0.35, roughness: 0.4 });
+        const mat = new THREE.MeshStandardMaterial({ color: 0xe8e2da, metalness: 0.35, roughness: 0.4 });
         pivot.add(new THREE.Mesh(geo, mat));
         revealNow();
       }
@@ -600,7 +602,6 @@ function mountPlaceholderViewer(mountEl, { icon, label, modelPath }, revealTarge
       <div class="model-face front"><div class="icon">${icon || "◆"}</div><div class="tag">3D-плейсхолдер</div></div>
       <div class="model-face back"><div class="icon">${icon || "◆"}</div><div class="tag">заменить на .glb</div></div>
     </div>
-    ${label ? `<div class="cell-label">${label}</div>` : ""}
   `;
   const card = mountEl.querySelector(".model-card");
 

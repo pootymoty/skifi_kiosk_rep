@@ -22,7 +22,6 @@ export function createCarousel(container, slides, { autoMs = 10000, resumeMs = 2
     slide.className = "carousel-slide";
     slide.innerHTML = `
       <img src="${s.image}" alt="" draggable="false">
-      ${s.caption ? `<div class="carousel-caption">${s.caption}</div>` : ""}
       <div class="asset-missing-note hidden"></div>
     `;
     const img = slide.querySelector("img");
