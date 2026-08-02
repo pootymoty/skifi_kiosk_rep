@@ -123,8 +123,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* ================= КАРТА (макет из Figma, экран 1280×720) ================= */
 .map-mount{flex:1; display:grid; place-items:center; min-height:0; overflow:hidden;}
 .map-stage{position:relative; aspect-ratio:16/9; max-width:100%; max-height:100%;
-  width:100%; border-radius:6px; overflow:hidden; background:var(--hero-bg);
-  container-type:inline-size;}
+  width:100%; border-radius:6px; overflow:hidden; background:var(--hero-bg);}
 .map-scrim{position:absolute; inset:0; background:rgba(8,6,4,0.72); opacity:0;
   pointer-events:none; transition:opacity .38s ease; z-index:1;}
 .map-stage.selecting .map-scrim{opacity:1;}
@@ -135,42 +134,32 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .hotspots-layer{position:absolute; inset:0; z-index:2;}
 
 /* --- заголовок: 2 больших слова (Stalinist One) + 2 эйбрау-подписи
-   (Geologica) — координаты 1:1 из Figma, просто выражены в % от
-   ширины карты вместо фиксированных пикселей (см. px() в map.js) --- */
-.hero-word{position:absolute; margin:0; z-index:3; white-space:nowrap;
+   (Geologica) — позиция/размер шрифта считаются в JS (js/screens/map.js
+   → relayout()) и проставляются как обычные px через style.left/top/
+   fontSize, единым коэффициентом масштаба для всей карты. Тексту
+   намеренно выставлен pointer-events:none — он рисуется НАД картинками
+   (z-index выше), но клик должен "проваливаться" сквозь буквы к
+   картинке под ними, если она там есть. --- */
+.hero-word{position:absolute; margin:0; z-index:3; white-space:nowrap; pointer-events:none;
   font-family:var(--font-display); font-weight:400; text-transform:uppercase;
-  font-size:calc(80 / 1280 * 100cqw); line-height:1.1; color:var(--hero-title-color);
+  line-height:1.1; color:var(--hero-title-color);
   transition:opacity .3s ease;}
-.hero-word-1{left:calc(197 / 1280 * 100cqw); top:calc(272 / 1280 * 100cqw);}
-.hero-word-2{left:calc(555 / 1280 * 100cqw); top:calc(368 / 1280 * 100cqw);}
-.hero-eyebrow{position:absolute; z-index:3; font-family:var(--font-ui); font-weight:300;
-  font-size:calc(32 / 1280 * 100cqw); line-height:1.1; letter-spacing:.01em;
+.hero-eyebrow{position:absolute; z-index:3; pointer-events:none; font-family:var(--font-ui); font-weight:300;
+  line-height:1.1; letter-spacing:.01em;
   color:var(--hero-eyebrow-color); transition:opacity .3s ease;}
-.hero-eyebrow-1{left:calc(638 / 1280 * 100cqw); top:calc(232 / 1280 * 100cqw);}
-.hero-eyebrow-2{left:calc(565 / 1280 * 100cqw); top:calc(451 / 1280 * 100cqw);}
 
 /* --- кнопки-пилюли (Авторы / Заставка) — 4 состояния из Figma:
    обычное / неактивное (:disabled) / наведение (:hover) / нажатие (:active).
-   Обратите внимание: в состоянии "наведение" дизайнер задал тёмный
-   текст/рамку (#0E0606) поверх той же полупрозрачной светлой заливки,
-   что и в обычном состоянии — контраст там ощутимо ниже, чем в
-   остальных состояниях. Перенёс как есть, один в один из спецификации,
-   но если это не то, что задумывалось — скажите, поправим. На самом
-   сенсорном экране это состояние в любом случае почти не будет видно
-   (hover — для мыши, не для тача). --- */
+   Позиция/размер/шрифт — тоже через JS relayout(), см. выше. --- */
 .pill-btn{position:absolute; z-index:2; box-sizing:border-box;
   display:flex; align-items:center; justify-content:center;
-  padding:calc(17/1280*100cqw) calc(47/1280*100cqw);
-  width:calc(200/1280*100cqw); height:calc(51/1280*100cqw);
   background:var(--hero-line-20); border:2px solid var(--hero-text); border-radius:100px;
-  font-family:var(--font-ui); font-weight:300; font-size:calc(24/1280*100cqw);
+  font-family:var(--font-ui); font-weight:300;
   letter-spacing:.01em; text-transform:uppercase; color:var(--hero-text); cursor:pointer;
   transition:background .2s ease, border-color .2s ease, color .2s ease;}
 .pill-btn:hover{border-color:var(--accent-red); color:var(--accent-red);}
 .pill-btn:active{background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .pill-btn:disabled{border-color:var(--hero-line-50); color:var(--hero-line-50); cursor:default;}
-.hero-btn-restart{left:calc(425/1280*100cqw); top:calc(649/1280*100cqw);}
-.hero-btn-authors{left:calc(655/1280*100cqw); top:calc(649/1280*100cqw);}
 
 /* --- объекты (пантера / человек / ковёр) — картинки с прозрачным фоном,
    позиция/размер/поворот 1:1 из Figma (heroLayout в content.js) --- */
@@ -335,12 +324,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .text-arrow:hover:not(:disabled){border-color:var(--accent-red); color:var(--accent-red);}
 .text-arrow:active:not(:disabled){background:var(--accent-red); border-color:var(--accent-red); color:var(--hero-bg);}
 .text-arrow:disabled{border-color:var(--hero-line-50); color:var(--hero-line-50); cursor:default;}
-.text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;}
+.text-content{flex:1; min-height:0; overflow-y:auto; padding:2px 4px; touch-action:pan-y;
+  transition:opacity .22s ease; align-self:stretch;}
+.text-content.fading{opacity:0;}
 .text-content h3{font-size:1.4rem; color:var(--gold-bright); margin-bottom:5px;
   letter-spacing:.08em; font-weight:400;}
 .text-content p{font-size:1.25rem; line-height:1.5; color:var(--text); margin:0; font-weight:300;}
-.text-section{margin-bottom:20px;}
-.text-section:last-child{margin-bottom:0;}
 .txt-location{margin-top:6px !important; font-size:1rem !important; letter-spacing:.04em;
   color:var(--text-dim); opacity:.55; font-style:italic;}
 .txt-location.hidden{display:none;}
@@ -374,8 +363,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* ================= ОСОБЫЕ РАСКЛАДКИ ОБЪЕКТОВ ================= */
 
-/* Переиспользуемый текстовый блок (см. js/utils/textBlock.js) — БЕЗ
-   пагинации, все секции идут одна за другой, блок прокручивается. */
+/* Переиспользуемый текстовый блок с пагинацией (см. js/utils/textBlock.js) —
+   стрелки/точки видны только если у блока больше одной страницы. */
 .mini-text-block{display:flex; flex-direction:column; height:100%; min-height:0;}
 
 /* --- «Ковёр»: картинка в правой половине (с небольшим заходом за

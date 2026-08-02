@@ -1,29 +1,52 @@
 // ============================================================
 // Интерактивная карта — макет из Figma (экран 1280×720 в дизайне).
 //
-// КАК СДЕЛАНО МАСШТАБИРОВАНИЕ: все координаты/размеры/повороты объектов
-// заданы в content.js как есть, один в один из Figma (heroLayout.left/
-// top/width/height/rotate — в пикселях макета 1280×720). В CSS они
-// переводятся в единицы "cqw" (% от ширины родителя, см. .map-stage{
-// container-type:inline-size}) через calc(N/1280*100cqw) — то есть
-// одно и то же число, но выраженное в процентах от реальной ширины
-// карты. За счёт этого макет масштабируется идентично что на ноутбуке,
-// что на интерактивном столе — реальные пиксели тут вообще не хранятся,
-// хранится только ПРОПОРЦИЯ относительно ширины экрана 1280.
+// КАК СДЕЛАНО МАСШТАБИРОВАНИЕ: всё (координаты картинок из content.js,
+// и позиции заголовка/эйбрау/кнопок ниже, заданные тут же в LAYOUT) —
+// в пикселях макета 1280×720, один в один из Figma. При каждом ресайзе
+// считаем ОДИН коэффициент scale = реальная_ширина_карты / 1280 и
+// применяем его как обычное умножение через JS (не через CSS cqw —
+// пробовал, давал неверный результат для части элементов; через JS
+// результат гарантированно предсказуем и уже проверен на хит-тесте
+// по альфа-каналу ниже). За счёт единого коэффициента для X и Y макет
+// масштабируется без искажений на любом экране — 1280×720 это просто
+// точка отсчёта, использовать её "напрямую" (без scale) нигде не нужно.
 //
 // Три объекта (пантера/человек/ковёр) — картинки с прозрачным фоном,
 // повёрнутые под углом (как в макете). Клик засчитывается только по
 // непрозрачным пикселям, и это работает даже с учётом поворота —
-// см. hitTestAtPoint (переводит точку клика в локальные координаты
+// см. isOpaqueAt (переводит точку клика в локальные координаты
 // картинки, отменяя поворот, прежде чем проверять альфа-канал).
+//
+// Текст (заголовок/эйбрау) рисуется ПОВЕРХ картинок (z-index выше), но
+// сам не перехватывает клики (pointer-events:none) — палец «проваливается»
+// сквозь буквы к картинке под ними, если она там есть.
 // ============================================================
 import { createOnceHint } from "../utils/hints.js";
 
 const SELECT_DELAY_MS = 380;
 const ALPHA_THRESHOLD = 15; // 0-255, ниже — пиксель считается прозрачным
-const REF_W = 1280; // ширина макета в Figma — точка отсчёта для всех calc()
+const REF_W = 1280; // ширина макета в Figma — единая точка отсчёта для всех расчётов
 
-function px(n) { return `calc(${n} / ${REF_W} * 100cqw)`; }
+// Позиции статичных элементов (заголовок/эйбрау/кнопки) — в пикселях
+// макета 1280×720, 1 в 1 из Figma. Картинки объектов берутся отдельно
+// из content.js → objects.*.heroLayout (они per-объектные, эти — нет).
+const LAYOUT = {
+  word1: { left: 197, top: 272, fontSize: 80 },
+  word2: { left: 555, top: 368, fontSize: 80 },
+  eyebrow1: { left: 638, top: 232, fontSize: 32 },
+  eyebrow2: { left: 565, top: 451, fontSize: 32 },
+  btnRestart: { left: 425, top: 649, width: 200, height: 51, fontSize: 24 },
+  btnAuthors: { left: 655, top: 649, width: 200, height: 51, fontSize: 24 }
+};
+
+function applyLayout(el, spec, scale) {
+  if (spec.left !== undefined) el.style.left = spec.left * scale + "px";
+  if (spec.top !== undefined) el.style.top = spec.top * scale + "px";
+  if (spec.width !== undefined) el.style.width = spec.width * scale + "px";
+  if (spec.height !== undefined) el.style.height = spec.height * scale + "px";
+  if (spec.fontSize !== undefined) el.style.fontSize = spec.fontSize * scale + "px";
+}
 
 export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo, showHint) {
   const heroEntries = Object.entries(objects).filter(([, d]) => d.heroLayout);
@@ -33,15 +56,15 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     <div class="map-stage">
       <div class="map-scrim"></div>
 
-      <div class="hero-eyebrow hero-eyebrow-1" data-eyebrow="1"></div>
-      <h1 class="hero-word hero-word-1" data-word="1"></h1>
-      <h1 class="hero-word hero-word-2" data-word="2"></h1>
-      <div class="hero-eyebrow hero-eyebrow-2" data-eyebrow="2"></div>
-
       <div class="hotspots-layer"></div>
 
-      <button class="pill-btn hero-btn-authors">Авторы</button>
-      <button class="pill-btn hero-btn-restart" title="Переиграть видео-заставку">Заставка</button>
+      <div class="hero-eyebrow" data-el="eyebrow1"></div>
+      <h1 class="hero-word" data-el="word1"></h1>
+      <h1 class="hero-word" data-el="word2"></h1>
+      <div class="hero-eyebrow" data-el="eyebrow2"></div>
+
+      <button class="pill-btn hero-btn-authors" data-el="btnAuthors">Авторы</button>
+      <button class="pill-btn hero-btn-restart" data-el="btnRestart" title="Переиграть видео-заставку">Заставка</button>
 
       <div class="hint-toast map-hint">Нажмите на объект, чтобы узнать больше</div>
     </div>
@@ -54,10 +77,10 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   const hintEl = container.querySelector(".map-hint");
 
   // Заголовок — два слова + эйбрау-подписи рядом с каждым (см. content.js → map.title)
-  container.querySelector('[data-word="1"]').textContent = mapData.title?.line1 || "";
-  container.querySelector('[data-word="2"]').textContent = mapData.title?.line2 || "";
-  container.querySelector('[data-eyebrow="1"]').textContent = mapData.eyebrow1 || "";
-  container.querySelector('[data-eyebrow="2"]').textContent = mapData.eyebrow2 || "";
+  container.querySelector('[data-el="word1"]').textContent = mapData.title?.line1 || "";
+  container.querySelector('[data-el="word2"]').textContent = mapData.title?.line2 || "";
+  container.querySelector('[data-el="eyebrow1"]').textContent = mapData.eyebrow1 || "";
+  container.querySelector('[data-el="eyebrow2"]').textContent = mapData.eyebrow2 || "";
 
   function roundMarkup(data) {
     return `<div class="ring"></div><div class="ring2"></div>
@@ -67,6 +90,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
 
   let transitioning = false;
   const alphaMap = new Map(); // hotspot-элемент → { natW, natH, data, left, top, width, height, rotate } (в px макета 1280×720)
+  const heroEls = []; // { el, L } — для пересчёта позиции/размера при ресайзе
 
   function selectHotspot(id, el) {
     if (transitioning) return;
@@ -82,12 +106,9 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     const hs = document.createElement("div");
     hs.className = "hotspot hero-object";
     hs.dataset.id = id;
-    hs.style.left = px(L.left);
-    hs.style.top = px(L.top);
-    hs.style.width = px(L.width);
-    hs.style.height = px(L.height);
     hs.style.transform = `rotate(${L.rotate}deg)`;
     hs.innerHTML = `<img class="hero-object-img" src="${L.image}" alt="" draggable="false">`;
+    heroEls.push({ el: hs, L });
 
     const img = hs.querySelector(".hero-object-img");
     img.addEventListener("error", () => {
@@ -111,6 +132,29 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     hs.innerHTML = roundMarkup(data);
     layer.appendChild(hs);
   });
+
+  // Пересчитываем позиции/размеры ВСЕХ элементов макета (картинки,
+  // заголовок, эйбрау, кнопки) при любом изменении размера карты —
+  // единый коэффициент scale для всего, без искажений.
+  function relayout() {
+    const scale = stage.clientWidth / REF_W;
+    if (!scale) return;
+
+    heroEls.forEach(({ el, L }) => {
+      el.style.left = L.left * scale + "px";
+      el.style.top = L.top * scale + "px";
+      el.style.width = L.width * scale + "px";
+      el.style.height = L.height * scale + "px";
+    });
+
+    Object.entries(LAYOUT).forEach(([key, spec]) => {
+      const el = container.querySelector(`[data-el="${key}"]`);
+      if (el) applyLayout(el, spec, scale);
+    });
+  }
+  const ro = new ResizeObserver(relayout);
+  ro.observe(stage);
+  relayout();
 
   function buildAlphaMask(hs, img, L) {
     const w = img.naturalWidth, h = img.naturalHeight;
@@ -184,6 +228,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   return {
     destroy() {
       hint.dispose();
+      ro.disconnect();
     }
   };
 }
