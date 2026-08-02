@@ -377,7 +377,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    1280px-канвы, пересчитано из пикселей — см. пояснение в чате):
    5% пусто | 34.4% текст | 18.4% пусто (зазор) | 31.25% картинка | 10.9% пусто --- */
 .carpet-split{display:grid; height:100%;
-  grid-template-columns: 5% 34.4% 18.4% 31.25% 10.9%;}
+  grid-template-columns: 5% 50% 13% 31% 11%;}
 .carpet-split .carpet-split-text{grid-column:2; min-height:0;
   display:flex; flex-direction:column;}
 .carpet-split .carpet-split-stage{grid-column:4; position:relative; min-width:0;
@@ -391,7 +391,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* --- «Человек»: сцена (видео/модель) + кнопка-переключатель слева,
    карусель одежды + независимый текст справа --- */
 .human-split{display:flex; height:100%; gap:14px;}
-.human-split-stage-col{flex:0 0 40%; display:flex; flex-direction:column; gap:14px; min-height:0;
+.human-split-stage-col{flex:0 0 51%; display:flex; flex-direction:column; gap:14px; min-height:0;
   padding-bottom:64px;}
 .human-split .human-split-stage{flex:1; position:relative; min-width:0; min-height:0;}
 /* Кнопка позиционируется от .obj-body (там position:relative, а сам
@@ -403,12 +403,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .human-video-stage.revealed{opacity:1; transform:scale(1);}
 .human-video{max-width:100%; max-height:100%; width:auto; height:100%;
   aspect-ratio:9/16; object-fit:cover; display:block; border-radius:4px;}
-.human-split-right{flex:1 1 60%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
+.human-split-right{flex:1 1 49%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
 /* Стрелки текста «о находке» — выровнены по той же Y, что и «Меню» и
    остальные стрелки на других страницах (тот же анкор — .obj-body,
    растянутый на весь экран, поэтому здесь тоже намеренно нет своего
    position:relative). */
-.human-text-aligned .text-arrows-row{position:absolute; left:42%; right:18px; bottom:20px;}
+.human-text-aligned .text-arrows-row{position:absolute; left:51%; right:18px; bottom:20px;}
 .human-carousel{flex:1 1 55%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
   background:transparent;}
 .human-about-text{flex:1 1 45%; min-height:0; padding-top:6px;}
@@ -426,7 +426,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    стрелок — текст слева (на всю высоту), модель справа сверху,
    стрелки под моделью справа (как в макете) --- */
 .beast-carousel{display:grid; height:100%; gap:14px;
-  grid-template-columns:35% 1fr;
+  grid-template-columns:50% 1fr;
   grid-template-rows:1fr;
   padding-bottom:64px;}
 .beast-carousel-text{grid-column:1; grid-row:1; min-height:0; overflow:hidden;}
@@ -437,7 +437,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   white-space:pre-line;}
 .beast-carousel-stage-wrap{grid-column:2; grid-row:1; position:relative; min-width:0; min-height:0;}
 .beast-carousel-stage{position:absolute; inset:0; min-width:0; min-height:0; max-height:none;}
-.beast-carousel-arrows{position:absolute; left:38%; right:18px; bottom:20px; display:flex; justify-content:center; gap:16px;}
+.beast-carousel-arrows{position:absolute; left:52%; right:18px; bottom:20px; display:flex; justify-content:center; gap:16px;}
 
 /* ================= АДАПТИВНОСТЬ: ТЕЛЕФОН / ТЕСНАЯ ВЫСОТА =================
    Основной экран (интерактивный стол/проектор) — просторный, эти
