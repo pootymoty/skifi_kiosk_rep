@@ -232,7 +232,8 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .page-title{margin:0 0 18px; font-family:var(--font-display); font-weight:400;
   font-size:2.3rem; text-transform:uppercase; color:rgba(243,232,227,0.8);
   flex:0 0 auto;}
-.obj-body{flex:1; display:flex; flex-direction:column; padding:52px 18px 76px; min-height:0; overflow-y:auto;}
+.obj-body{flex:1; display:flex; flex-direction:column; padding:52px 18px 76px; min-height:0;
+  overflow-y:auto; position:relative;}
 .obj-standard{flex:1; display:flex; flex-direction:column; min-height:0; gap:14px;}
 .obj-custom{flex:1; min-height:0;}
 .obj-custom.hidden{display:none;}
@@ -375,6 +376,12 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .mini-text-block.arrows-below{gap:10px;}
 .mini-text-block.arrows-below .text-content{flex:1; min-height:0;}
 .text-arrows-row{display:flex; justify-content:center; gap:20px; flex:0 0 auto;}
+/* Стрелки ковра — выровнены по той же Y, что и кнопка «Меню».
+   ВАЖНО: анкор для position:absolute — .obj-body (растянут на весь
+   экран), поэтому здесь намеренно НЕТ своего position:relative —
+   иначе привязка сломается и уедет на локальные координаты колонки. */
+.carpet-text-aligned{padding-bottom:64px;}
+.carpet-text-aligned .text-arrows-row{position:absolute; left:42%; right:18px; bottom:20px;}
 
 /* --- «Ковёр»: картинка в левой половине, текст справа (единый блок,
    без деления на верхнее/центральное поле, как было раньше) --- */
@@ -388,15 +395,24 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 /* --- «Человек»: сцена (видео/модель) + кнопка-переключатель слева,
    карусель одежды + независимый текст справа --- */
 .human-split{display:flex; height:100%; gap:14px;}
-.human-split-stage-col{flex:0 0 40%; display:flex; flex-direction:column; gap:14px; min-height:0;}
+.human-split-stage-col{flex:0 0 40%; display:flex; flex-direction:column; gap:14px; min-height:0;
+  padding-bottom:64px;}
 .human-split .human-split-stage{flex:1; position:relative; min-width:0; min-height:0;}
-.human-toggle-btn{flex:0 0 auto; align-self:flex-start; width:auto;}
+/* Кнопка позиционируется от .obj-body (там position:relative, а сам
+   он растянут на весь экран) — это та же система координат, что и у
+   кнопки «Меню», поэтому bottom:20px здесь даёт ТОЧНО ту же высоту. */
+.human-toggle-btn{position:absolute; left:18px; bottom:20px; width:auto;}
 .human-video-stage{display:flex; align-items:center; justify-content:center;
   opacity:0; transform:scale(.93); transition:opacity .42s ease, transform .42s cubic-bezier(.2,.8,.3,1);}
 .human-video-stage.revealed{opacity:1; transform:scale(1);}
 .human-video{max-width:100%; max-height:100%; width:auto; height:100%;
   aspect-ratio:9/16; object-fit:cover; display:block; border-radius:4px;}
-.human-split-right{flex:1 1 60%; display:flex; flex-direction:column; min-height:0; gap:16px;}
+.human-split-right{flex:1 1 60%; display:flex; flex-direction:column; min-height:0; gap:16px; padding-bottom:64px;}
+/* Стрелки текста «о находке» — выровнены по той же Y, что и «Меню» и
+   остальные стрелки на других страницах (тот же анкор — .obj-body,
+   растянутый на весь экран, поэтому здесь тоже намеренно нет своего
+   position:relative). */
+.human-text-aligned .text-arrows-row{position:absolute; left:42%; right:18px; bottom:20px;}
 .human-carousel{flex:1 1 55%; position:relative; min-height:140px; border-radius:0; overflow:hidden;
   background:transparent;}
 .human-about-text{flex:1 1 45%; min-height:0; padding-top:6px;}
@@ -415,8 +431,9 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    стрелки под моделью справа (как в макете) --- */
 .beast-carousel{display:grid; height:100%; gap:14px;
   grid-template-columns:35% 1fr;
-  grid-template-rows:1fr auto;}
-.beast-carousel-text{grid-column:1; grid-row:1 / span 2; min-height:0; overflow:hidden;}
+  grid-template-rows:1fr;
+  padding-bottom:64px;}
+.beast-carousel-text{grid-column:1; grid-row:1; min-height:0; overflow:hidden;}
 .beast-carousel-text h3{font-family:var(--font-display); font-weight:400; font-size:2.3rem;
   text-transform:uppercase; color:rgba(243,232,227,0.8); line-height:1.1; margin:0 0 10px;}
 .beast-carousel-text h3:empty{display:none;}
@@ -424,7 +441,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   white-space:pre-line;}
 .beast-carousel-stage-wrap{grid-column:2; grid-row:1; position:relative; min-width:0; min-height:0;}
 .beast-carousel-stage{position:absolute; inset:0; min-width:0; min-height:0; max-height:none;}
-.beast-carousel-arrows{grid-column:2; grid-row:2; display:flex; justify-content:center; gap:16px;}
+.beast-carousel-arrows{position:absolute; left:38%; right:18px; bottom:20px; display:flex; justify-content:center; gap:16px;}
 
 /* ================= АДАПТИВНОСТЬ: ТЕЛЕФОН / ТЕСНАЯ ВЫСОТА =================
    Основной экран (интерактивный стол/проектор) — просторный, эти
@@ -438,16 +455,19 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   .obj-standard{overflow-y:auto;}
 
   .carpet-split, .human-split{flex-direction:column; height:auto; min-height:100%;}
-  .carpet-split .carpet-split-text{flex:0 0 auto; padding-left:0;}
+  .carpet-split .carpet-split-text{flex:0 0 auto; padding-left:0; padding-bottom:0;}
   .carpet-split .carpet-split-stage{flex:0 0 auto; height:340px; min-height:280px;}
-  .human-split-stage-col{flex:0 0 auto;}
+  .carpet-text-aligned .text-arrows-row{position:static; padding-top:10px;}
+  .human-split-stage-col{flex:0 0 auto; padding-bottom:0;}
+  .human-toggle-btn{position:static; margin-top:10px;}
   .human-split .human-split-stage{flex:0 0 auto; height:280px; min-height:240px;}
-  .human-split-right{flex:0 0 auto;}
+  .human-split-right{flex:0 0 auto; padding-bottom:0;}
+  .human-text-aligned .text-arrows-row{position:static; padding-top:10px;}
   .human-carousel{flex:0 0 auto; height:200px; min-height:200px;}
   .human-about-text{flex:0 0 auto; min-height:120px;}
 
-  .beast-carousel{display:flex; flex-direction:column; height:auto; min-height:100%;}
+  .beast-carousel{display:flex; flex-direction:column; height:auto; min-height:100%; padding-bottom:0;}
   .beast-carousel-text{min-height:100px;}
   .beast-carousel-stage-wrap{height:260px; min-height:220px; flex:0 0 auto;}
-  .beast-carousel-arrows{justify-content:center;}
+  .beast-carousel-arrows{position:static; justify-content:center; padding-top:10px;}
 }

@@ -21,7 +21,7 @@ export async function initCarpetSplit(container, data, helpers = {}) {
   `;
 
   const textEl = container.querySelector(".carpet-split-text");
-  const pager = createTextBlock(textEl, data.sections, { arrowsBelow: true });
+  const pager = createTextBlock(textEl, data.sections, { arrowsBelow: true, extraClass: "carpet-text-aligned" });
 
   const stageEl = container.querySelector(".carpet-split-stage");
   const stage2d = initObjectStage2D(stageEl, {

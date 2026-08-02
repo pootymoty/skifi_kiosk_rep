@@ -47,7 +47,7 @@ export async function initHumanSplit(container, data) {
       stageController = await mountModelViewer(stageEl, { modelPath: data.model, icon: data.icon });
     }
     await stageController.ready; // дожидаемся, чтобы переключение не выглядело "недогруженным"
-    toggleBtn.textContent = showingVideo ? "3D модель" : "ии визуализация";
+    toggleBtn.textContent = showingVideo ? "3D модель" : "Видео";
   }
 
   const hasBoth = !!(data.video && data.model);
