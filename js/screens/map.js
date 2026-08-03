@@ -144,7 +144,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       // Компенсируем поворот самого объекта отдельным transform на
       // обёртке — иначе ладошка крутилась бы вместе с картинкой.
       handWrap.style.transform = `translate(-50%, -50%) rotate(${-L.rotate}deg)`;
-      handWrap.innerHTML = `<div class="tap-hand">👆</div>`;
+      handWrap.innerHTML = `<div class="tap-hand-pulse"><div class="tap-hand">👆</div></div>`;
       hs.appendChild(handWrap);
       handEl = handWrap.querySelector(".tap-hand");
     }
@@ -178,7 +178,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       handWrap.style.left = "50%";
       handWrap.style.top = "50%";
       handWrap.style.transform = "translate(-50%, -50%)";
-      handWrap.innerHTML = `<div class="tap-hand">👆</div>`;
+      handWrap.innerHTML = `<div class="tap-hand-pulse"><div class="tap-hand">👆</div></div>`;
       hs.appendChild(handWrap);
     }
     layer.appendChild(hs);
