@@ -37,7 +37,13 @@ const LAYOUT = {
   eyebrow1: { left: 638, top: 232, fontSize: 32 },
   eyebrow2: { left: 565, top: 451, fontSize: 32 },
   btnRestart: { left: 425, top: 649, width: 200, height: 51, fontSize: 24 },
-  btnAuthors: { left: 655, top: 649, width: 200, height: 51, fontSize: 24 }
+  btnAuthors: { left: 655, top: 649, width: 200, height: 51, fontSize: 24 },
+  // Подсказка "Нажмите на объект..." — раньше не масштабировалась
+  // вместе с остальной картой (жила на фиксированном rem-размере),
+  // из-за чего выглядела непропорционально большой. top не задаём —
+  // позиция остаётся в CSS (по центру сверху), масштабируем только
+  // размер шрифта и внутренний отступ.
+  hint: { fontSize: 22, paddingV: 9, paddingH: 18 }
 };
 
 function applyLayout(el, spec, scale) {
@@ -46,6 +52,9 @@ function applyLayout(el, spec, scale) {
   if (spec.width !== undefined) el.style.width = spec.width * scale + "px";
   if (spec.height !== undefined) el.style.height = spec.height * scale + "px";
   if (spec.fontSize !== undefined) el.style.fontSize = spec.fontSize * scale + "px";
+  if (spec.paddingV !== undefined && spec.paddingH !== undefined) {
+    el.style.padding = (spec.paddingV * scale) + "px " + (spec.paddingH * scale) + "px";
+  }
 }
 
 export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo, showHint) {
@@ -66,7 +75,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       <button class="pill-btn hero-btn-authors" data-el="btnAuthors">Авторы</button>
       <button class="pill-btn hero-btn-restart" data-el="btnRestart" title="Переиграть видео-заставку">Заставка</button>
 
-      <div class="hint-toast map-hint">Нажмите на объект, чтобы узнать больше</div>
+      <div class="hint-toast map-hint" data-el="hint">Нажмите на объект, чтобы узнать больше</div>
     </div>
   `;
 
