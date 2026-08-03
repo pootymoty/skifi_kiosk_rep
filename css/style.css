@@ -332,11 +332,6 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3;
   transition:opacity .35s ease;}
 .hole-marker.hidden{opacity:0; pointer-events:none;}
-.hole-marker .ring{position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent-red);
-  opacity:.85; animation:pulse 1.8s ease-in-out infinite;}
-.hole-marker .ring2{position:absolute; inset:13px; border-radius:50%;
-  background:rgba(223,30,41,0.55); border:1.5px solid var(--accent-red);
-  box-shadow:0 0 20px rgba(223,30,41,0.75);}
 /* --- missing-asset badge (both stages) --- */
 .asset-missing-note{position:absolute; left:12px; bottom:12px; z-index:4;
   font-family:var(--font-ui); font-size:10.5px; letter-spacing:.05em;
@@ -419,7 +414,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   display:flex; flex-direction:column;}
 .carpet-split .carpet-split-stage{grid-column:4; position:relative; min-width:0;
   max-height:none; min-height:0; height:100%;}
-.carpet-split .text-content{display:flex; flex-direction:column; justify-content:center;}
+.carpet-split .text-content{display:flex; flex-direction:column;}
 /* Заголовок страницы для ковра начинается там же, где текст (5% от
    ширины, а не от общего отступа .obj-body) — используем :has(), чтобы
    не трогать заголовок на остальных страницах (там другие координаты). */
