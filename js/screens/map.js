@@ -110,6 +110,17 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     setTimeout(() => onSelect(id), SELECT_DELAY_MS);
   }
 
+  // Позиция ладошки-подсказки на объекте — в процентах от САМОЙ картинки
+  // (в её локальной, неповёрнутой системе координат — то есть "правый
+  // верхний угол картинки", даже если на экране она повёрнута). По
+  // умолчанию — центр (50,50). У ковра картинка сильно уходит за границы
+  // экрана (см. heroLayout), поэтому центр её полного прямоугольника
+  // оказывается за пределами видимой области — пришлось сдвинуть отдельно.
+  const HAND_OFFSET = {
+    carpet: { x: 82, y: 18 },
+    panther: { x: 62, y: 38 }
+  };
+
   // --- объекты с точной раскладкой из Figma (heroLayout) ---
   heroEntries.forEach(([id, data]) => {
     const L = data.heroLayout;
@@ -125,8 +136,11 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
       // объект ни разу не открывали. Считать её "видел/не видел"
       // нужно на уровне app.js (карта пересоздаётся заново при каждом
       // возврате), поэтому список посещённых передаётся снаружи.
+      const off = HAND_OFFSET[id] || { x: 50, y: 50 };
       const handWrap = document.createElement("div");
       handWrap.className = "tap-hand-wrap";
+      handWrap.style.left = off.x + "%";
+      handWrap.style.top = off.y + "%";
       // Компенсируем поворот самого объекта отдельным transform на
       // обёртке — иначе ладошка крутилась бы вместе с картинкой.
       handWrap.style.transform = `translate(-50%, -50%) rotate(${-L.rotate}deg)`;
@@ -161,6 +175,8 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     if (!visited.has(id)) {
       const handWrap = document.createElement("div");
       handWrap.className = "tap-hand-wrap";
+      handWrap.style.left = "50%";
+      handWrap.style.top = "50%";
       handWrap.style.transform = "translate(-50%, -50%)";
       handWrap.innerHTML = `<div class="tap-hand">👆</div>`;
       hs.appendChild(handWrap);
