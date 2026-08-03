@@ -60,7 +60,11 @@
    соотношение сторон обычно то же (16:9), но экран физически другой —
    эта формула подстраивает размер текста под реальную ширину/высоту
    вьюпорта, а не держит его на фиксированном числе пикселей всегда. */
-html{font-size:clamp(15px, 1vw, 24px);}
+/* Раньше здесь был clamp(), реагирующий на ширину экрана — теперь эту
+   работу делает масштаб .design-canvas целиком (см. app.js → fitCanvas),
+   поэтому базовый размер шрифта фиксированный (карту это не касается —
+   там все размеры считаются в JS и не используют rem). */
+html{font-size:20px;}
 html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000;
   font-family:var(--font-ui); color:var(--text); touch-action:none;}
 #app{position:relative; width:100vw; overflow:hidden;
@@ -73,6 +77,16 @@ html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; backgro
   opacity:0; pointer-events:none; transform:scale(0.985); filter:blur(2px);
   transition:opacity .45s ease, transform .45s ease, filter .45s ease; background:transparent;}
 .screen.active{opacity:1; pointer-events:auto; transform:scale(1); filter:blur(0);}
+
+/* ---------- фиксированный холст 1280×720, который целиком
+   масштабируется под реальный экран (см. app.js → fitCanvas) — вместо
+   переверстки на маленьких экранах раскладка просто одинаково
+   уменьшается/увеличивается. Только для экранов объекта/авторов —
+   карта и видео устроены иначе, их не трогаем. ---------- */
+#screen-object, #screen-authors{align-items:center; justify-content:center; overflow:hidden;}
+.design-canvas{position:relative; width:1280px; height:720px; flex-shrink:0;
+  transform-origin:center center;}
+.design-canvas .obj-body, .design-canvas .authors-body{position:absolute; inset:0; overflow:hidden;}
 
 /* ---------- typography ---------- */
 .eyebrow{font-family:var(--font-ui); font-size:1.15rem; letter-spacing:.32em;
@@ -438,33 +452,3 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .beast-carousel-stage-wrap{grid-column:2; grid-row:1; position:relative; min-width:0; min-height:0;}
 .beast-carousel-stage{position:absolute; inset:0; min-width:0; min-height:0; max-height:none;}
 .beast-carousel-arrows{position:absolute; left:52%; right:18px; bottom:20px; display:flex; justify-content:center; gap:16px;}
-
-/* ================= АДАПТИВНОСТЬ: ТЕЛЕФОН / ТЕСНАЯ ВЫСОТА =================
-   Основной экран (интерактивный стол/проектор) — просторный, эти
-   раскладки не нужны. Но на маленьких экранах (при тестировании с
-   телефона, в любой ориентации) фиксированные пропорции сжимали модели
-   почти до нуля. Здесь — резервный режим: раскладки становятся простым
-   вертикальным списком С ГАРАНТИРОВАННОЙ минимальной высотой под
-   каждый блок, а вся страница получает обычную прокрутку. */
-@media (max-width:900px), (max-height:560px){
-  .obj-body{overflow-y:auto; -webkit-overflow-scrolling:touch;}
-  .obj-standard{overflow-y:auto;}
-
-  .carpet-split{display:flex; flex-direction:column; height:auto; min-height:100%;}
-  .human-split{flex-direction:column; height:auto; min-height:100%;}
-  .carpet-split .carpet-split-text{padding-bottom:0;}
-  .carpet-split .carpet-split-stage{height:340px; min-height:280px;}
-  .carpet-text-aligned .text-arrows-row{position:static; padding-top:10px;}
-  .human-split-stage-col{flex:0 0 auto; padding-bottom:0;}
-  .human-toggle-btn{position:static; margin-top:10px;}
-  .human-split .human-split-stage{flex:0 0 auto; height:280px; min-height:240px;}
-  .human-split-right{flex:0 0 auto; padding-bottom:0;}
-  .human-text-aligned .text-arrows-row{position:static; padding-top:10px;}
-  .human-carousel{flex:0 0 auto; height:200px; min-height:200px;}
-  .human-about-text{flex:0 0 auto; min-height:120px;}
-
-  .beast-carousel{display:flex; flex-direction:column; height:auto; min-height:100%; padding-bottom:0;}
-  .beast-carousel-text{min-height:100px;}
-  .beast-carousel-stage-wrap{height:260px; min-height:220px; flex:0 0 auto;}
-  .beast-carousel-arrows{position:static; justify-content:center; padding-top:10px;}
-}
