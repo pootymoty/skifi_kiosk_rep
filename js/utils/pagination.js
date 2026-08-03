@@ -100,6 +100,7 @@ export class TextPager {
   _render() {
     const s = this.sections[this.page];
     if (!s) return;
+    this.textContentEl.scrollTop = 0; // иначе новый текст мог открыться уже прокрученным (оставалось от предыдущего)
     this.heading.textContent = s.h;
     this.body.textContent = s.t;
     if (this.location) {
