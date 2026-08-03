@@ -57,7 +57,8 @@ function applyLayout(el, spec, scale) {
   }
 }
 
-export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo, showHint) {
+export function initMapScreen(container, mapData, objects, onSelect, onAuthors, onRestartVideo, showHint, visitedIds) {
+  const visited = visitedIds || new Set();
   const heroEntries = Object.entries(objects).filter(([, d]) => d.heroLayout);
   const fallbackEntries = Object.entries(objects).filter(([, d]) => !d.heroLayout);
 
@@ -117,7 +118,23 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     hs.dataset.id = id;
     hs.style.transform = `rotate(${L.rotate}deg)`;
     hs.innerHTML = `<img class="hero-object-img" src="${L.image}" alt="" draggable="false">`;
-    heroEls.push({ el: hs, L });
+
+    let handEl = null;
+    if (!visited.has(id)) {
+      // Подсказка "сюда можно тыкать" — показываем, только пока
+      // объект ни разу не открывали. Считать её "видел/не видел"
+      // нужно на уровне app.js (карта пересоздаётся заново при каждом
+      // возврате), поэтому список посещённых передаётся снаружи.
+      const handWrap = document.createElement("div");
+      handWrap.className = "tap-hand-wrap";
+      // Компенсируем поворот самого объекта отдельным transform на
+      // обёртке — иначе ладошка крутилась бы вместе с картинкой.
+      handWrap.style.transform = `translate(-50%, -50%) rotate(${-L.rotate}deg)`;
+      handWrap.innerHTML = `<div class="tap-hand">👆</div>`;
+      hs.appendChild(handWrap);
+      handEl = handWrap.querySelector(".tap-hand");
+    }
+    heroEls.push({ el: hs, L, handEl });
 
     const img = hs.querySelector(".hero-object-img");
     img.addEventListener("error", () => {
@@ -141,6 +158,13 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     hs.style.left = data.hotspot.x + "%";
     hs.style.top = data.hotspot.y + "%";
     hs.innerHTML = roundMarkup(data);
+    if (!visited.has(id)) {
+      const handWrap = document.createElement("div");
+      handWrap.className = "tap-hand-wrap";
+      handWrap.style.transform = "translate(-50%, -50%)";
+      handWrap.innerHTML = `<div class="tap-hand">👆</div>`;
+      hs.appendChild(handWrap);
+    }
     layer.appendChild(hs);
   });
 
@@ -166,11 +190,12 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
     const scale = stage.clientWidth / REF_W;
     if (!scale) return;
 
-    heroEls.forEach(({ el, L }) => {
+    heroEls.forEach(({ el, L, handEl }) => {
       el.style.left = L.left * scale + "px";
       el.style.top = L.top * scale + "px";
       el.style.width = L.width * scale + "px";
       el.style.height = L.height * scale + "px";
+      if (handEl) handEl.style.fontSize = (40 * scale) + "px";
     });
 
     Object.entries(LAYOUT).forEach(([key, spec]) => {
