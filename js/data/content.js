@@ -77,6 +77,7 @@ export const CONTENT = {
       entries: [
         {
           modelPath: "assets/models/panther-deer.glb",
+          lightBoost: 1.4,
           icon: "🐆🦌",
           pageTitle: "",
           section: {
@@ -86,6 +87,7 @@ export const CONTENT = {
         },
         {
           modelPath: "assets/models/panther.glb",
+          lightBoost: 1.4,
           icon: "🐆",
           pageTitle: "ПАНТЕРА",
           section: {
