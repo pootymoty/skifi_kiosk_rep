@@ -228,7 +228,7 @@ export const CONTENT = {
   },
 
   authors: {
-    text: "Интерактивная экспозиция «Скифы Алтая. Древности Сибири» подготовлена командой проекта.",
+    text: "Интерактивная экспозиция «Древности Алтая. Древние скифы» подготовлена командой проекта.",
     // 4 карточки в ряд: QR-код (у каждого свой — предположительно ведёт
     // на личный Telegram/страницу), имя, роль в проекте. Замените
     // плейсхолдеры на реальные данные и положите QR-картинки по путям
@@ -237,7 +237,7 @@ export const CONTENT = {
       { qr: "assets/images/authors/AntvQR.png", name: "Анастасия Антонова", role: "Автор концепта<br>AI-creator" },
       { qr: "assets/images/authors/SafrQR.png", name: "Михаил Сафронов", role: "Редактор" },
       { qr: "assets/images/authors/ShanQR.png", name: "Марина Шейн", role: "Дизайнер" },
-      { qr: "assets/images/authors/UrvcQR.png", name: "Урвачев Роман", role: "Разработчик" }
+      { qr: "assets/images/authors/UrvcQR.png", name: "Роман Урвачев", role: "Разработчик" }
     ]
   }
 
