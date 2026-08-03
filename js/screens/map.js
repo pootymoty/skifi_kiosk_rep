@@ -117,7 +117,7 @@ export function initMapScreen(container, mapData, objects, onSelect, onAuthors, 
   // экрана (см. heroLayout), поэтому центр её полного прямоугольника
   // оказывается за пределами видимой области — пришлось сдвинуть отдельно.
   const HAND_OFFSET = {
-    carpet: { x: 82, y: 18 },
+    carpet: { x: 82, y: 58 },
     panther: { x: 62, y: 38 }
   };
 
