@@ -200,6 +200,18 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   filter:drop-shadow(0 0 7px rgba(240,238,238,0.45)) drop-shadow(0 0 14px rgba(240,238,238,.25));}
 .hero-object-missing{outline:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);}
 
+/* --- подсказка "сюда можно тыкать" (пульсирующая ладошка) — только
+   на ещё не открытых объектах, см. js/screens/map.js. Обёртка держит
+   позицию+компенсацию поворота объекта (задаётся через JS, статично),
+   сама ладошка внутри — анимируется отдельно, без конфликта transform. --- */
+.tap-hand-wrap{position:absolute; top:50%; left:50%; z-index:5; pointer-events:none;}
+.tap-hand{font-size:2.5rem; line-height:1; animation:tapPulse 1.5s ease-in-out infinite;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,0.7));}
+@keyframes tapPulse{
+  0%,100%{transform:scale(1) translateY(0); opacity:.8;}
+  50%{transform:scale(1.2) translateY(-4px); opacity:1;}
+}
+
 /* --- метка объекта: круглая кнопка (запасной вариант, если у объекта
    нет heroLayout из Figma) --- */
 .hotspot{position:absolute; width:112px; height:112px; transform:translate(-50%,-50%);
