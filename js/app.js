@@ -49,6 +49,7 @@ function fitCanvas(screenEl, canvasEl) {
 }
 fitCanvas(screens.object, document.getElementById("objCanvas"));
 fitCanvas(screens.authors, document.getElementById("authorsCanvas"));
+fitCanvas(screens.video, document.getElementById("videoCanvas"));
 
 // Экраны «карта» и «авторы» имеют свою постоянную шапку (кнопка «Назад» и т.п.),
 // поэтому их динамическое содержимое монтируется во вложенный контейнер,
@@ -107,7 +108,7 @@ const idleWatcher = createGlobalIdleWatcher(
 // ---------------- VIDEO ----------------
 function startIntro() {
   idleWatcher.pause(); // на самой заставке отдельный таймер простоя не нужен
-  activeController = initVideoScreen(screens.video, CONTENT.intro.video, () => {
+  activeController = initVideoScreen(document.getElementById("videoCanvas"), CONTENT.intro.video, () => {
     teardownActive();
     idleWatcher.resume();
     hintPendingAfterVideo = true; // подсказка на карте покажется один раз именно сейчас
