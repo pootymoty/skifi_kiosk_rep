@@ -82,7 +82,8 @@ export async function mountModelViewer(mountEl, opts, renderOpts = {}) {
 // переданный элемент (это либо весь #stage3d для одной модели,
 // либо одна ячейка сетки для нескольких моделей).
 // ----------------------------------------------------------------
-function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader, revealTarget, lite) {
+function mountRealViewer(mountEl, { modelPath, icon, label, lightBoost }, THREE, GLTFLoader, revealTarget, lite) {
+  const boost = lightBoost || 1; // множитель яркости света — задаётся per-модельно в content.js
   const badge = document.createElement("div");
   badge.className = "asset-missing-note hidden";
   mountEl.appendChild(badge);
@@ -100,8 +101,8 @@ function mountRealViewer(mountEl, { modelPath, icon, label }, THREE, GLTFLoader,
   const baseDistance = 4.4;
   camera.position.set(0, 0, baseDistance);
 
-  scene.add(new THREE.AmbientLight(0xfff2d8, 0.8));
-  const key = new THREE.DirectionalLight(0xffe3b0, 1.15);
+  scene.add(new THREE.AmbientLight(0xfff2d8, 0.8 * boost));
+  const key = new THREE.DirectionalLight(0xffe3b0, 1.15 * boost);
   key.position.set(3, 4, 5);
   scene.add(key);
   if (!lite) {

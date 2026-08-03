@@ -61,7 +61,7 @@ export async function initBeastCarousel(container, { title, entries }, helpers =
     // на друге при каждом переключении. Чистим явно перед новым монтированием.
     stageEl.innerHTML = "";
     stageEl.classList.remove("revealed");
-    viewer = await mountModelViewer(stageEl, { modelPath: entry.modelPath, icon: entry.icon });
+    viewer = await mountModelViewer(stageEl, { modelPath: entry.modelPath, icon: entry.icon, lightBoost: entry.lightBoost });
     await viewer.ready; // дожидаемся, чтобы страница/переключение не выглядели "недогруженными"
 
     busy = false;

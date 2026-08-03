@@ -104,7 +104,10 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
     let w, h;
     if (imgAspect > containerAspect) { w = cw; h = cw / imgAspect; }
     else { h = ch; w = ch * imgAspect; }
-    return { w, h, x: (cw - w) / 2, y: (ch - h) / 2 };
+    // Картинка прижата к ПРАВОМУ краю области (см. CSS → object-position:right),
+    // а не центрирована — поэтому и здесь считаем x от правого края,
+    // иначе метка "дырки" окажется не там, где реально нарисована картинка.
+    return { w, h, x: cw - w, y: (ch - h) / 2 };
   }
   const ro = new ResizeObserver(layoutMarker);
   ro.observe(wrap);
