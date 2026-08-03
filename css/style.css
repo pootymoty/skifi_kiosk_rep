@@ -202,10 +202,15 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 
 /* --- подсказка "сюда можно тыкать" (пульсирующая ладошка) — только
    на ещё не открытых объектах, см. js/screens/map.js. Обёртка держит
-   позицию+компенсацию поворота объекта (задаётся через JS, статично),
-   сама ладошка внутри — анимируется отдельно, без конфликта transform. --- */
+   позицию+компенсацию поворота объекта (задаётся через JS, статично).
+   Перекраска в белый (.tap-hand) и анимация пульсации (.tap-hand-pulse)
+   намеренно на РАЗНЫХ элементах — если и то, и другое на одном элементе,
+   в некоторых браузерах цветное эмодзи начинает мигать между белым и
+   чёрным каждый кадр анимации (баг перерасчёта фильтра при анимации
+   transform на том же узле). --- */
 .tap-hand-wrap{position:absolute; z-index:5; pointer-events:none;}
-.tap-hand{font-size:2.5rem; line-height:1; animation:tapPulse 1.5s ease-in-out infinite;
+.tap-hand-pulse{animation:tapPulse 1.5s ease-in-out infinite;}
+.tap-hand{font-size:2.5rem; line-height:1;
   filter:brightness(0) invert(1) drop-shadow(0 3px 8px rgba(0,0,0,0.7));}
 @keyframes tapPulse{
   0%,100%{transform:scale(1) translateY(0); opacity:.8;}
