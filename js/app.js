@@ -66,6 +66,11 @@ let activeController = null; // destroy()-хук текущего динамич
 // сразу после того, как карта его один раз использует.
 let hintPendingAfterVideo = false;
 
+// Какие объекты пользователь уже открывал хотя бы раз в этом сеансе —
+// на них больше не нужна пульсирующая ладошка-подсказка "сюда можно
+// тыкать" на карте (см. js/screens/map.js).
+const visitedObjects = new Set();
+
 function showScreen(name) {
   Object.values(screens).forEach(s => s.classList.remove("active"));
   screens[name].classList.add("active");
@@ -128,7 +133,8 @@ function goMap() {
     (id) => openObject(id),
     () => goAuthors(),
     () => restartVideo(),
-    showHint
+    showHint,
+    visitedObjects
   );
   showScreen("map");
 }
@@ -169,6 +175,7 @@ async function openObject(id) {
   const data = CONTENT.objects[id];
   if (!data) { console.error("[app] Неизвестный объект: " + id); return; }
 
+  visitedObjects.add(id);
   showLoadingOverlay();
   showScreen("object"); // переключаемся сразу — дальше пользователь видит анимацию загрузки, а не "зависшую" карту
   pageTitleEl.textContent = data.title;
@@ -246,6 +253,7 @@ function goAuthors() {
 }
 document.getElementById("btnBackFromAuthors").addEventListener("pointerdown", () => {
   teardownActive();
+  hintPendingAfterVideo = true; // подсказка на карте покажется заново, как и после видео
   goMap();
 });
 
