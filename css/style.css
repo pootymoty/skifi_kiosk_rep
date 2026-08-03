@@ -83,7 +83,7 @@ html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; backgro
    переверстки на маленьких экранах раскладка просто одинаково
    уменьшается/увеличивается. Только для экранов объекта/авторов —
    карта и видео устроены иначе, их не трогаем. ---------- */
-#screen-object, #screen-authors{align-items:center; justify-content:center; overflow:hidden;}
+#screen-object, #screen-authors, #screen-video{align-items:center; justify-content:center; overflow:hidden;}
 .design-canvas{position:relative; width:1280px; height:720px; flex-shrink:0;
   transform-origin:center center;}
 .design-canvas .obj-body, .design-canvas .authors-body{position:absolute; inset:0; overflow:hidden;}
@@ -140,7 +140,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .intro-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
 .intro-fade{position:absolute; inset:0; background:#000; opacity:0; pointer-events:none;
   transition:opacity .4s ease;}
-#screen-video.fading-out .intro-fade{opacity:1;}
+#videoCanvas.fading-out .intro-fade{opacity:1;}
 .intro-skip{position:absolute; right:22px; bottom:22px;}
 
 /* ================= КАРТА (макет из Figma, экран 1280×720) ================= */
@@ -443,7 +443,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
   grid-template-columns:50% 1fr;
   grid-template-rows:1fr;
   padding-bottom:64px;}
-.beast-carousel-text{grid-column:1; grid-row:1; min-height:0; overflow:hidden;}
+.beast-carousel-text{grid-column:1; grid-row:1; min-height:0; overflow-y:auto;}
 .beast-carousel-text h3{font-family:var(--font-display); font-weight:400; font-size:2.3rem;
   text-transform:uppercase; color:rgba(243,232,227,0.8); line-height:1.1; margin:0 0 10px;}
 .beast-carousel-text h3:empty{display:none;}
