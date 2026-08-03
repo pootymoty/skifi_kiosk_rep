@@ -204,9 +204,9 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
    на ещё не открытых объектах, см. js/screens/map.js. Обёртка держит
    позицию+компенсацию поворота объекта (задаётся через JS, статично),
    сама ладошка внутри — анимируется отдельно, без конфликта transform. --- */
-.tap-hand-wrap{position:absolute; top:50%; left:50%; z-index:5; pointer-events:none;}
+.tap-hand-wrap{position:absolute; z-index:5; pointer-events:none;}
 .tap-hand{font-size:2.5rem; line-height:1; animation:tapPulse 1.5s ease-in-out infinite;
-  filter:drop-shadow(0 3px 8px rgba(0,0,0,0.7));}
+  filter:brightness(0) invert(1) drop-shadow(0 3px 8px rgba(0,0,0,0.7));}
 @keyframes tapPulse{
   0%,100%{transform:scale(1) translateY(0); opacity:.8;}
   50%{transform:scale(1.2) translateY(-4px); opacity:1;}
