@@ -235,7 +235,7 @@ export const CONTENT = {
     // ниже (все в одном визуальном стиле — как и договаривались).
     team: [
       { qr: "assets/images/authors/AntvQR.png", name: "Анастасия Антонова", role: "Автор концепта<br>AI-creator" },
-      { qr: "assets/images/authors/SafrQR.png", name: "Михаил Сафронов", role: "Копирайтер" },
+      { qr: "assets/images/authors/SafrQR.png", name: "Михаил Сафронов", role: "Редактор" },
       { qr: "assets/images/authors/ShanQR.png", name: "Марина Шейн", role: "Дизайнер" },
       { qr: "assets/images/authors/UrvcQR.png", name: "Урвачев Роман", role: "Разработчик" }
     ]
