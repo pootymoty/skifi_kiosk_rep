@@ -25,50 +25,59 @@
     <div class="map-mount"></div>
   </section>
 
-  <!-- ===================== ЭКРАН ОБЪЕКТА — общий шаблон (ТЗ п.9-10) ===================== -->
+  <!-- ===================== ЭКРАН ОБЪЕКТА — общий шаблон (ТЗ п.9-10) =====================
+       .design-canvas — фиксированный холст 1280×720 (тот же формат, что
+       и макеты Figma). Масштабируется целиком под реальный размер экрана
+       через JS (см. app.js → fitCanvas) — раскладка НЕ переверстывается
+       на маленьких экранах, а просто одинаково уменьшается/увеличивается,
+       как единая картинка. -->
   <section class="screen" id="screen-object">
-    <div class="page-loading-overlay hidden" id="objLoadingOverlay">
-      <div class="boot-dots"><span></span><span></span><span></span></div>
-    </div>
-    <div class="mini-logo">
-      <div class="mini-logo-brand">Древние скифы</div>
-    </div>
-    <button class="btn ghost btn-back" id="btnBackFromObject">Меню</button>
-    <div class="obj-body">
+    <div class="design-canvas" id="objCanvas">
+      <div class="page-loading-overlay hidden" id="objLoadingOverlay">
+        <div class="boot-dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="mini-logo">
+        <div class="mini-logo-brand">Древние скифы</div>
+      </div>
+      <button class="btn ghost btn-back" id="btnBackFromObject">Меню</button>
+      <div class="obj-body">
 
-      <h2 class="page-title" id="pageTitle"></h2>
+        <h2 class="page-title" id="pageTitle"></h2>
 
-      <!-- Стандартная раскладка (объекты без своего layout) -->
-      <div class="obj-standard" id="objStandard">
-        <div class="stage-3d" id="stage3d"></div>
-        <div class="stage-2d" id="stage2d"></div>
+        <!-- Стандартная раскладка (объекты без своего layout) -->
+        <div class="obj-standard" id="objStandard">
+          <div class="stage-3d" id="stage3d"></div>
+          <div class="stage-2d" id="stage2d"></div>
 
-        <div class="text-panel">
-          <div class="text-slider">
-            <button class="text-arrow" id="txtPrev" aria-label="Предыдущий блок">‹</button>
-            <div class="text-content">
-              <h3 id="txtHeading">—</h3>
-              <p id="txtBody">—</p>
-              <p id="txtLocation" class="txt-location"></p>
+          <div class="text-panel">
+            <div class="text-slider">
+              <button class="text-arrow" id="txtPrev" aria-label="Предыдущий блок">‹</button>
+              <div class="text-content">
+                <h3 id="txtHeading">—</h3>
+                <p id="txtBody">—</p>
+                <p id="txtLocation" class="txt-location"></p>
+              </div>
+              <button class="text-arrow" id="txtNext" aria-label="Следующий блок">›</button>
             </div>
-            <button class="text-arrow" id="txtNext" aria-label="Следующий блок">›</button>
           </div>
         </div>
+
+        <!-- Особые раскладки: beast-grid / human-split / carpet-split (см. js/app.js) -->
+        <div class="obj-custom hidden" id="objCustom"></div>
+
       </div>
-
-      <!-- Особые раскладки: beast-grid / human-split / carpet-split (см. js/app.js) -->
-      <div class="obj-custom hidden" id="objCustom"></div>
-
     </div>
   </section>
 
   <!-- ===================== АВТОРЫ (ТЗ п.15) ===================== -->
   <section class="screen" id="screen-authors">
-    <div class="mini-logo">
-      <div class="mini-logo-brand">Древние скифы</div>
+    <div class="design-canvas" id="authorsCanvas">
+      <div class="mini-logo">
+        <div class="mini-logo-brand">Древние скифы</div>
+      </div>
+      <button class="btn ghost btn-back" id="btnBackFromAuthors">Меню</button>
+      <div class="authors-body"></div>
     </div>
-    <button class="btn ghost btn-back" id="btnBackFromAuthors">Меню</button>
-    <div class="authors-body"></div>
   </section>
 
 </div>
