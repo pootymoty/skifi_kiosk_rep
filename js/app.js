@@ -31,6 +31,25 @@ const screens = {
   authors: document.getElementById("screen-authors")
 };
 
+// Экраны объекта/авторов построены на фиксированном холсте 1280×720
+// (см. index.html → .design-canvas) — вместо переверстки на маленьких
+// экранах он просто целиком масштабируется под реальный размер экрана,
+// сохраняя ту же раскладку, что и на весь экран ноутбука. Тот же
+// принцип, что уже применяется на карте.
+const REF_W = 1280, REF_H = 720;
+function fitCanvas(screenEl, canvasEl) {
+  function resize() {
+    const availW = screenEl.clientWidth, availH = screenEl.clientHeight;
+    if (!availW || !availH) return;
+    const scale = Math.min(availW / REF_W, availH / REF_H);
+    canvasEl.style.transform = `scale(${scale})`;
+  }
+  new ResizeObserver(resize).observe(screenEl);
+  resize();
+}
+fitCanvas(screens.object, document.getElementById("objCanvas"));
+fitCanvas(screens.authors, document.getElementById("authorsCanvas"));
+
 // Экраны «карта» и «авторы» имеют свою постоянную шапку (кнопка «Назад» и т.п.),
 // поэтому их динамическое содержимое монтируется во вложенный контейнер,
 // а не в саму секцию целиком.
