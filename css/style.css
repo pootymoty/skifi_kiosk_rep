@@ -315,6 +315,7 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .canvas2d-wrap{position:absolute; inset:0; overflow:hidden; touch-action:none;}
 .canvas2d-pan{position:absolute; inset:0; transform-origin:center center; will-change:transform;}
 .canvas2d-img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+  object-position:right center;
   pointer-events:none; transition:opacity .25s ease;}
 .canvas2d-img.fading{opacity:0;}
 .canvas2d-wrap.no-image .canvas2d-img{display:none;}
@@ -405,10 +406,15 @@ h1,h2,h3{font-weight:400; margin:0; font-variant:small-caps; letter-spacing:.03e
 .carpet-text-aligned .text-arrows-row{position:absolute; left:5%; right:60.6%; bottom:20px;}
 
 /* --- «Ковёр»: точная сетка колонок из макета Figma (в процентах от
-   1280px-канвы, пересчитано из пикселей — см. пояснение в чате):
-   5% пусто | 34.4% текст | 18.4% пусто (зазор) | 31.25% картинка | 10.9% пусто --- */
+   1280px-канвы, пересчитано из пикселей — см. пояснение в чате).
+   Зазор между текстом и картинкой сокращён (было 13%) в пользу самой
+   области картинки (было 31%) — при приближении/панорамировании теперь
+   больше места для этого. Картинка при этом прижата к ПРАВОМУ краю
+   своей области (см. object2d.js → containRect + CSS object-position),
+   поэтому в состоянии покоя её видимое положение не меняется — просто
+   область вокруг нее стала шире слева. --- */
 .carpet-split{display:grid; height:100%;
-  grid-template-columns: 5% 50% 13% 31% 11%;}
+  grid-template-columns: 5% 50% 5% 39% 11%;}
 .carpet-split .carpet-split-text{grid-column:2; min-height:0;
   display:flex; flex-direction:column;}
 .carpet-split .carpet-split-stage{grid-column:4; position:relative; min-width:0;
