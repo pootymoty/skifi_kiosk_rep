@@ -100,7 +100,6 @@ export class TextPager {
   _render() {
     const s = this.sections[this.page];
     if (!s) return;
-    this.textContentEl.scrollTop = 0; // иначе новый текст мог открыться уже прокрученным (оставалось от предыдущего)
     this.heading.textContent = s.h;
     this.body.textContent = s.t;
     if (this.location) {
@@ -112,6 +111,11 @@ export class TextPager {
         this.location.classList.add("hidden");
       }
     }
+    // Сброс прокрутки — ПОСЛЕ обновления текста и ещё раз следующим
+    // кадром: иначе браузер (scroll anchoring) иногда сам возвращает
+    // прокрутку туда, где она была на предыдущем тексте.
+    this.textContentEl.scrollTop = 0;
+    requestAnimationFrame(() => { this.textContentEl.scrollTop = 0; });
 
     // Листать нечего — одна секция. Стрелки только мешали бы
     // (намекали бы на пагинацию, которой по факту нет).
