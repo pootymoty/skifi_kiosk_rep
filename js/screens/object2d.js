@@ -30,7 +30,7 @@ export function initObjectStage2D(container, { imagePath, hole, baseSections, on
       <div class="canvas2d-pan">
         <img class="canvas2d-img base-img" alt="" draggable="false">
         <div class="hole-marker hidden">
-          <div class="ring"></div><div class="ring2"></div>
+          <div class="tap-hand-pulse"><div class="tap-hand">👆</div></div>
         </div>
       </div>
       <div class="asset-missing-note base-missing hidden"></div>
