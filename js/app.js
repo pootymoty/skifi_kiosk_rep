@@ -113,6 +113,7 @@ const idleWatcher = createGlobalIdleWatcher(
 // ---------------- VIDEO ----------------
 function startIntro() {
   idleWatcher.pause(); // на самой заставке отдельный таймер простоя не нужен
+  visitedObjects.clear(); // ладошки-подсказки должны появиться заново после (пере)показа видео
   activeController = initVideoScreen(document.getElementById("videoCanvas"), CONTENT.intro.video, () => {
     teardownActive();
     idleWatcher.resume();
